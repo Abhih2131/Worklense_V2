@@ -1,12 +1,13 @@
 # app.py
 
 import streamlit as st
-import importlib.util
 import os
+import importlib
+from utils.data_handler import load_all_data, ensure_datetime, filter_dataframe
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="HR BI App", layout="wide")
 
-# ✅ Inject custom CSS from /config/style.css
+# === Inject global CSS ===
 try:
     with open("config/style.css") as f:
         css = f.read()
@@ -14,80 +15,75 @@ try:
 except FileNotFoundError:
     st.warning("Custom CSS file not found.")
 
-# ✅ Header with Help and Logout
-st.markdown("""
-<div class='custom-header'>
-  <div class='header-left'>
-    <div class='brand-name'>BSES</div>
-    <div class='brand-tagline'>Dashboard</div>
-  </div>
-  <div class='header-right'>
-    <a href="https://yourhelp.site" target="_blank">Help</a>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+# --- Data load ---
+data_files = {
+    'employee_master': 'data/employee_master.xlsx',
+    'leave': 'data/HRMS_Leave.xlsx',
+    'sales': 'data/Sales_INR.xlsx'
+}
+data = load_all_data(data_files)
+config = {}
 
-# ✅ Load data
-@st.cache_data
-def load_all_data(path):
-    from data_handler import load_all_data as real_loader
-    return real_loader(path)
+# --- Modular report loading ---
+def get_report_modules():
+    report_folder = "reports"
+    files = [f for f in os.listdir(report_folder) if f.endswith(".py") and not f.startswith("__")]
+    modules = [f[:-3] for f in files]
+    return modules
 
-data_folder = "data"
-with st.spinner("Loading data..."):
-    data = load_all_data(data_folder)
-df_emp = data['employee']
+report_modules = get_report_modules()
 
-# ✅ Load reports
-report_folder = "reports"
-report_files = [f.replace(".py", "") for f in os.listdir(report_folder) if f.endswith(".py")]
+# --- Sidebar: Report select at top, then filter expander ---
+st.sidebar.title("HR BI Reports")
+selected_report = st.sidebar.selectbox(
+    "Select Report",
+    report_modules,
+    format_func=lambda x: x.replace("_", " ").title()
+)
 
-# ✅ Report selector
-st.sidebar.markdown("### 📊 Select Report")
-selected_report = st.sidebar.selectbox("Report", report_files, key="report_selector")
+st.sidebar.markdown("---")
+st.sidebar.markdown("### Filters")
 
-# ✅ Filters
-st.sidebar.markdown("### 🧭 Filters")
+filter_columns = [
+    "company", "business_unit", "department", "function",
+    "zone", "area", "band", "employment_type"
+]
+emp_df = data['employee_master']
+filter_dict = {}
 
-def get_filter_values(column):
-    return sorted(df_emp[column].dropna().unique())
+with st.sidebar.expander("Show Filters", expanded=False):
+    n_cols = 2  # Two filters per row
+    for row_start in range(0, len(filter_columns), n_cols):
+        cols = st.sidebar.columns(n_cols)
+        for i in range(n_cols):
+            col_idx = row_start + i
+            if col_idx >= len(filter_columns):
+                continue
+            col = filter_columns[col_idx]
+            options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+            key = f"sidebar_{col}"
+            with cols[i]:
+                chosen = st.multiselect(
+                    col.replace("_", " ").title(),
+                    options=options,
+                    default=[],
+                    key=key
+                )
+                # If nothing selected, treat as "All" for filter logic
+                if not chosen:
+                    filter_dict[col] = options
+                else:
+                    filter_dict[col] = chosen
 
-with st.sidebar:
-    col1, col2 = st.columns(2)
-    with col1:
-        company = st.multiselect("Company", get_filter_values("company"), placeholder="Select...")
-        business_unit = st.multiselect("Business Unit", get_filter_values("business_unit"), placeholder="Select...")
-        area = st.multiselect("Area", get_filter_values("area"), placeholder="Select...")
-        department = st.multiselect("Department", get_filter_values("department"), placeholder="Select...")
-    with col2:
-        employment_type = st.multiselect("Employment Type", get_filter_values("employment_type"), placeholder="Select...")
-        zone = st.multiselect("Zone", get_filter_values("zone"), placeholder="Select...")
-        function = st.multiselect("Function", get_filter_values("function"), placeholder="Select...")
-        band = st.multiselect("Band", get_filter_values("band"), placeholder="Select...")
+# --- Apply filter to all reports globally ---
+filtered_emp = filter_dataframe(emp_df, filter_dict)
+filtered_emp = ensure_datetime(filtered_emp, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
+data['employee_master'] = filtered_emp
 
-# ✅ Apply filters
-def apply_filters(df):
-    if company: df = df[df['company'].isin(company)]
-    if employment_type: df = df[df['employment_type'].isin(employment_type)]
-    if business_unit: df = df[df['business_unit'].isin(business_unit)]
-    if zone: df = df[df['zone'].isin(zone)]
-    if area: df = df[df['area'].isin(area)]
-    if function: df = df[df['function'].isin(function)]
-    if department: df = df[df['department'].isin(department)]
-    if band: df = df[df['band'].isin(band)]
-    return df
-
-data['employee'] = apply_filters(df_emp)
-
-# ✅ Load and render report
-try:
-    report_path = os.path.join(report_folder, f"{selected_report}.py")
-    spec = importlib.util.spec_from_file_location("report_module", report_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    module.render(data)
-except Exception as e:
-    st.error(f"Failed to load report: {e}")
-
-# ✅ Footer
-st.markdown("<div class='custom-footer'></div>", unsafe_allow_html=True)
+# --- Run the selected report ---
+if selected_report:
+    mod = importlib.import_module(f"reports.{selected_report}")
+    if hasattr(mod, "run_report"):
+        mod.run_report(data, config)
+    else:
+        st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
