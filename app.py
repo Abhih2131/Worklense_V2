@@ -54,8 +54,7 @@ selected_report = st.sidebar.selectbox(
     format_func=lambda x: x.replace("_", " ").title()
 )
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### Filters")
+st.sidebar.markdown("**Filters**")
 
 filter_columns = [
     "company", "business_unit", "department", "function",
