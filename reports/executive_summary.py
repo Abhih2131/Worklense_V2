@@ -78,21 +78,32 @@ def run_report(data, config):
                 st.markdown(
                     f"""
                     <div style="
-                        background:{KPI_STYLE['background_color']};
+                        background:{KPI_STYLE['background_gradient']};
                         box-shadow:{KPI_STYLE['box_shadow']};
                         border-radius:{KPI_STYLE['border_radius']};
                         padding:{KPI_STYLE['padding']};
                         width:{KPI_STYLE['box_width']}px;
                         height:{KPI_STYLE['box_height']}px;
-                        text-align:center;
                         display:flex;
                         flex-direction:column;
-                        justify-content:center;
-                        align-items:center;">
-                        <span style="font-size:{KPI_STYLE['font_size_label']};font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};">
+                        justify-content:space-between;
+                        align-items:center;
+                        margin-bottom:14px;
+                        transition:box-shadow 0.2s;">
+                        <div style="
+                            height:{KPI_STYLE['accent_height']};
+                            width:60px;
+                            background:{KPI_STYLE['accent_color']};
+                            border-radius:8px;
+                            margin-bottom:18px;"></div>
+                        <span style="font-size:{KPI_STYLE['font_size_label']};
+                                     font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};
+                                     color:{KPI_STYLE['label_color']};">
                             {kpi['label']}
                         </span>
-                        <span style="font-size:{KPI_STYLE['font_size_value']};color:{KPI_STYLE['value_color']};margin-top:10px;">
+                        <span style="font-size:{KPI_STYLE['font_size_value']};
+                                     color:{KPI_STYLE['value_color']};
+                                     margin-top:7px;">
                             {format_kpi(kpi['value'], kpi['type'])}
                         </span>
                     </div>
