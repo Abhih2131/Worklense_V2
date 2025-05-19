@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from kpi_design import render_kpi_card  # Import your new KPI card function
+from kpi_design import render_kpi_card  # Use your new KPI card function
 
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
@@ -117,7 +117,6 @@ def render_donut_chart(df, names, values):
     st.plotly_chart(fig, use_container_width=True)
 
 def run_report(data, config):
-    theme_selector()
     st.markdown(
         """
         <style>
@@ -175,7 +174,7 @@ def run_report(data, config):
             if idx >= len(kpis): break
             kpi = kpis[idx]
             with cols[j]:
-                st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type'], idx), unsafe_allow_html=True)
+                st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type']), unsafe_allow_html=True)
 
     charts = [
         ("Manpower Growth", lambda df: prepare_manpower_growth_data(df, fy_list), render_line_chart, {"x": "FY", "y": "Headcount"}),
@@ -206,7 +205,7 @@ def run_report(data, config):
 # streamlit run app.py
 
 # UAT Checklist:
-# - Only "Chart Style (Plotly Theme)" in sidebar, no theme selector.
+# - Only "Chart Style (Plotly Theme)" in sidebar (from main app/theme handler), not here.
 # - All KPI cards use new design from kpi_design.py.
 # - KPIs and chart data/format are correct.
 # - 8 charts display, 2 per row, layout smooth.
