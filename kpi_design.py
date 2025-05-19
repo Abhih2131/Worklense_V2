@@ -1,9 +1,11 @@
+# kpi_design.py
+
 KPI_STYLE = {
     "background": "#f4f6fa",  # Flat pastel
     "border_radius": "18px",
     "box_shadow": "0 2px 12px rgba(80,120,160,0.10)",
     "padding": "22px 0 10px 0",
-    "width": "100%",  # Responsive
+    "width": "100%",  # Responsive, fills parent column
     "height": "96px",
     "value_font_size": "2.2rem",
     "value_color": "#23235B",  # Navy
