@@ -1,16 +1,14 @@
-
-
 KPI_STYLE = {
-    "background": "#416A9360",
+    "background": "linear-gradient(135deg, #E0FCF7 0%, #F0F4FF 100%)",  # 2-colour gradient
     "border_radius": "18px",
     "box_shadow": "0 2px 12px rgba(80,120,160,0.10)",
     "padding": "22px 0 10px 0",
     "width": "100%",
     "height": "96px",
     "value_font_size": "2.0rem",
-    "value_color": "#E6E7EA",
+    "value_color": "#23235B",  # More contrast than E6E7EA for text
     "label_font_size": "1.08rem",
-    "label_color": "#080808",
+    "label_color": "#0A2540",  # Slightly darker for label
     "label_bold": True,
     "margin_bottom": "6px",
     "text_align": "center",
