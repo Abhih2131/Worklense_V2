@@ -5,27 +5,34 @@ from datetime import datetime
 
 def render_kpi_card(label, value):
     return f"""
-    <div style='background:#fff;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);padding:18px 0 10px 20px;min-height:65px;margin-bottom:14px;'>
-        <div style='font-weight:700;font-size:17px;color:#444;'>{label}</div>
-        <div style='font-size:26px;font-weight:600;color:#23239b;margin-top:6px;'>{value}</div>
+    <div style='background:#fff;border-radius:22px;box-shadow:0 4px 16px rgba(44,58,92,.12);padding:16px 10px 14px 26px;min-height:78px;max-width:330px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;margin-bottom:18px;'>
+        <div style='font-weight:700;font-size:19px;color:#222;margin-bottom:3px'>{label}</div>
+        <div style='font-size:30px;font-weight:800;color:#1a237e;margin-top:2px;'>{value}</div>
     </div>
     """
 
-def prepare_manpower_growth_data(df):
+def get_last_fy_list(current_fy, n=5):
+    return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
+
+def prepare_manpower_growth_data(df, fy_list):
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     grouped = df.groupby('FY').size().reset_index(name='Headcount')
-    return grouped.sort_values('FY')
+    grouped = grouped[grouped['FY'].isin(fy_list)]
+    grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
+    return grouped
 
-def prepare_manpower_cost_data(df):
+def prepare_manpower_cost_data(df, fy_list):
     if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')
-    return grouped.sort_values('FY')
+    grouped = grouped[grouped['FY'].isin(fy_list)]
+    grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
+    return grouped
 
-def prepare_attrition_data(df):
+def prepare_attrition_data(df, fy_list):
     if 'date_of_exit' not in df.columns: return pd.DataFrame(columns=['FY','Attrition %'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_exit'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
@@ -33,7 +40,9 @@ def prepare_attrition_data(df):
     headcount_df = df.groupby('FY').size().reset_index(name='Headcount')
     merged = pd.merge(attrition_df, headcount_df, on='FY', how='left')
     merged['Attrition %'] = (merged['Leavers'] / merged['Headcount']) * 100
-    return merged[['FY', 'Attrition %']].sort_values('FY')
+    merged = merged[merged['FY'].isin(fy_list)]
+    merged = merged.set_index('FY').reindex(fy_list).reset_index().fillna(0)
+    return merged[['FY', 'Attrition %']]
 
 def prepare_gender_data(df):
     if 'gender' not in df.columns: return pd.DataFrame(columns=['Gender','Count'])
@@ -92,7 +101,7 @@ def prepare_education_distribution(df):
 
 def render_line_chart(df, x, y):
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
-    fig = px.line(df, x=x, y=y)
+    fig = px.line(df, x=x, y=y, markers=True)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_bar_chart(df, x, y):
@@ -110,21 +119,38 @@ def render_donut_chart(df, names, values):
     fig = px.pie(df, names=names, values=values, hole=0.5)
     st.plotly_chart(fig, use_container_width=True)
 
+def theme_selector():
+    themes = {
+        "Light": "#f7f9fb",
+        "Classic Blue": "#eef4ff",
+        "Dark": "#1a2234"
+    }
+    selected = st.sidebar.selectbox("Theme Selector", list(themes.keys()))
+    bg_color = themes[selected]
+    st.markdown(f"""
+        <style>
+        .stApp {{ background-color: {bg_color}; }}
+        </style>
+    """, unsafe_allow_html=True)
+
 def run_report(data, config):
+    theme_selector()
     st.markdown(
         """
         <style>
-            .block-container {padding-top:2rem;}
-            .css-1vq4p4l {padding:0;}
+            .block-container {padding-top:2.1rem;}
         </style>
         """, unsafe_allow_html=True
     )
     st.title("Executive Summary")
     df = data.get("employee_master", pd.DataFrame())
+    now = datetime.now()
+    current_fy = now.year + 1 if now.month >= 4 else now.year
+    fy_list = get_last_fy_list(current_fy, n=5)
 
     today = pd.Timestamp.now().normalize()
-    fy_start = pd.Timestamp('2025-04-01')
-    fy_end = pd.Timestamp('2026-03-31')
+    fy_start = pd.Timestamp(f"{current_fy-1}-04-01")
+    fy_end = pd.Timestamp(f"{current_fy}-03-31")
 
     mask_active = (df['date_of_joining'] <= today) & ((df['date_of_exit'].isna()) | (df['date_of_exit'] > today))
     active = mask_active.sum()
@@ -140,7 +166,6 @@ def run_report(data, config):
     female_ratio = (female.sum() / total_active * 100) if isinstance(female, pd.Series) and total_active > 0 else 0
     avg_tenure = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df.columns else 0
 
-    now = datetime.now()
     def calc_age(dob):
         if pd.isnull(dob): return None
         return (now - pd.to_datetime(dob, errors='coerce')).days // 365
@@ -156,8 +181,8 @@ def run_report(data, config):
 
     kpis = [
         {"label": "Active Employees", "value": f"{int(active):,}"},
-        {"label": "Attrition Rate (FY 25-26)", "value": attrition_display},
-        {"label": "Joiners (FY 25-26)", "value": f"{int(joiners):,}"},
+        {"label": f"Attrition Rate (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": attrition_display},
+        {"label": f"Joiners (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": f"{int(joiners):,}"},
         {"label": "Total Cost (INR)", "value": total_cost_display},
         {"label": "Female Ratio", "value": female_ratio_display},
         {"label": "Avg Tenure", "value": avg_tenure_display},
@@ -175,9 +200,9 @@ def run_report(data, config):
                 st.markdown(render_kpi_card(kpi['label'], kpi['value']), unsafe_allow_html=True)
 
     charts = [
-        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart, {"x": "FY", "y": "Headcount"}),
-        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart, {"x": "FY", "y": "Total Cost"}),
-        ("Attrition Trend", prepare_attrition_data, render_line_chart, {"x": "FY", "y": "Attrition %"}),
+        ("Manpower Growth", lambda df: prepare_manpower_growth_data(df, fy_list), render_line_chart, {"x": "FY", "y": "Headcount"}),
+        ("Manpower Cost Trend", lambda df: prepare_manpower_cost_data(df, fy_list), render_bar_chart, {"x": "FY", "y": "Total Cost"}),
+        ("Attrition Trend", lambda df: prepare_attrition_data(df, fy_list), render_line_chart, {"x": "FY", "y": "Attrition %"}),
         ("Gender Diversity", prepare_gender_data, render_donut_chart, {"names": "Gender", "values": "Count"}),
         ("Age Distribution", prepare_age_distribution, render_pie_chart, {"names": "Age Group", "values": "Count"}),
         ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart, {"names": "Tenure Group", "values": "Count"}),
@@ -203,8 +228,8 @@ def run_report(data, config):
 # streamlit run app.py
 
 # UAT Checklist:
-# - KPIs visible, correct, formatted
-# - 8 charts shown, 2 per row, no missing chart
-# - No error on missing/extra columns
-# - No chart overlaps, no empty space, charts aligned side by side
-# - Run with your data to confirm full simulation
+# - KPIs show with design as required.
+# - 5-year charts for Manpower, Cost, Attrition.
+# - Theme selector working.
+# - All 8 charts display, 2 per row.
+# - Layout and data correct.
