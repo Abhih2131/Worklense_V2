@@ -25,7 +25,7 @@ def get_report_modules():
 
 report_modules = get_report_modules()
 
-# --- Sidebar: Reports first, then filters below ---
+# --- Sidebar: Report select at top, then filter expander ---
 st.sidebar.title("HR BI Reports")
 selected_report = st.sidebar.selectbox(
     "Select Report",
@@ -39,16 +39,17 @@ st.sidebar.markdown("### Filters")
 filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
 emp_df = data['employee_master']
 filter_dict = {}
-for col in filter_columns:
-    options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-    # By default, select all options
-    selected = st.sidebar.multiselect(
-        col.replace("_", " ").title(),
-        options=options,
-        default=options,
-        key=f"sidebar_{col}"
-    )
-    filter_dict[col] = selected
+
+with st.sidebar.expander("Show Filters", expanded=False):
+    for col in filter_columns:
+        options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+        selected = st.multiselect(
+            col.replace("_", " ").title(),
+            options=options,
+            default=options,  # All options selected by default
+            key=f"sidebar_{col}"
+        )
+        filter_dict[col] = selected
 
 # --- Apply filter to all reports globally ---
 filtered_emp = filter_dataframe(emp_df, filter_dict)
