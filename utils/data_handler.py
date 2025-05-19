@@ -1,20 +1,19 @@
 # utils/data_handler.py
 
 import pandas as pd
-import os
+
+def ensure_datetime(df, date_cols):
+    """Converts given columns in DataFrame to datetime, in place."""
+    for col in date_cols:
+        if col in df:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
+    return df
 
 def load_all_data(data_files):
     data = {}
     for key, path in data_files.items():
-        if os.path.exists(path):
+        try:
             data[key] = pd.read_excel(path)
-        else:
+        except Exception:
             data[key] = pd.DataFrame()  # Empty fallback
     return data
-
-def load_config(config_file):
-    if not os.path.exists(config_file):
-        return {}
-    xl = pd.ExcelFile(config_file)
-    config = {sheet: xl.parse(sheet) for sheet in xl.sheet_names}
-    return config
