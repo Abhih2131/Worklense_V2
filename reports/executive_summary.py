@@ -105,41 +105,114 @@ def run_report(data, config):
                 st.subheader(title)
                 render_func(data_chart)
 
-# Placeholder data prep functions
-def prepare_manpower_growth_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Headcount":[16000,17000]})
-def prepare_manpower_cost_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Total Cost":[2200,2400]})
-def prepare_attrition_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Attrition %":[12,15]})
-def prepare_gender_data(df): return pd.DataFrame({"Gender":["Female","Male"],"Count":[50,50]})
-def prepare_age_distribution(df): return pd.DataFrame({"Age Group":["20-30","31-40"],"Count":[300,200]})
-def prepare_tenure_distribution(df): return pd.DataFrame({"Tenure Group":["0-1","1-3"],"Count":[150,350]})
-def prepare_experience_distribution(df): return pd.DataFrame({"Experience Group":["0-5","5-10"],"Count":[400,100]})
-def prepare_transfer_trend(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Transfer %":[2,3]})
-def prepare_top_talent_data(df): return pd.DataFrame({"Talent":["Top","Others"],"Count":[100,400]})
-def prepare_performance_distribution(df): return pd.DataFrame({"Rating":[1,2,3,4,5],"Count":[5,15,25,30,25]})
-def prepare_education_distribution(df): return pd.DataFrame({"Qualification":["UG","PG"],"Count":[250,150]})
-def prepare_salary_distribution(df): return pd.DataFrame({"CTC":[1,2,3,4,5,6,7,8,9,10]})
+# Correct data prep returning required columns
 
-# Placeholder render functions using Plotly
-def render_line_chart(df, x="FY", y="Headcount"):
+def prepare_manpower_growth_data(df):
+    # Prepare DataFrame with columns FY, Headcount
+    data = {
+        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
+        "Headcount": [16000, 17000, 18000, 15000, 16800]
+    }
+    return pd.DataFrame(data)
+
+def prepare_manpower_cost_data(df):
+    data = {
+        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
+        "Total Cost": [2200, 2400, 2500, 2000, 2100]
+    }
+    return pd.DataFrame(data)
+
+def prepare_attrition_data(df):
+    data = {
+        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
+        "Attrition %": [12, 15, 13, 16, 14]
+    }
+    return pd.DataFrame(data)
+
+def prepare_gender_data(df):
+    data = {
+        "Gender": ["Female", "Male"],
+        "Count": [5000, 7000]
+    }
+    return pd.DataFrame(data)
+
+def prepare_age_distribution(df):
+    data = {
+        "Age Group": ["20-30", "31-40", "41-50", "51-60"],
+        "Count": [3000, 4000, 2500, 1500]
+    }
+    return pd.DataFrame(data)
+
+def prepare_tenure_distribution(df):
+    data = {
+        "Tenure Group": ["0-1", "1-3", "3-5", "5-10", "10+"],
+        "Count": [1000, 3000, 2500, 3500, 1000]
+    }
+    return pd.DataFrame(data)
+
+def prepare_experience_distribution(df):
+    data = {
+        "Experience Group": ["<1", "1-3", "3-5", "5-10", "10+"],
+        "Count": [1200, 2800, 2600, 3100, 1300]
+    }
+    return pd.DataFrame(data)
+
+def prepare_transfer_trend(df):
+    data = {
+        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
+        "Transfer %": [5, 6, 7, 6, 7]
+    }
+    return pd.DataFrame(data)
+
+def prepare_top_talent_data(df):
+    data = {
+        "Talent": ["Top", "Others"],
+        "Count": [1500, 6500]
+    }
+    return pd.DataFrame(data)
+
+def prepare_performance_distribution(df):
+    data = {
+        "Rating": [1, 2, 3, 4, 5],
+        "Count": [100, 200, 500, 700, 500]
+    }
+    return pd.DataFrame(data)
+
+def prepare_education_distribution(df):
+    data = {
+        "Qualification": ["UG", "PG", "Diploma", "PhD"],
+        "Count": [4000, 3500, 2000, 500]
+    }
+    return pd.DataFrame(data)
+
+def prepare_salary_distribution(df):
+    data = {
+        "CTC": [1,2,3,4,5,6,7,8,9,10,11,12]
+    }
+    return pd.DataFrame(data)
+
+# Plotly renderers
+
+def render_line_chart(df, x, y):
     fig = px.line(df, x=x, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_bar_chart(df, x="FY", y="Total Cost"):
+def render_bar_chart(df, x, y):
     fig = px.bar(df, x=x, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_pie_chart(df, names="Age Group", values="Count"):
+def render_pie_chart(df, names, values):
     fig = px.pie(df, names=names, values=values)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_donut_chart(df, names="Gender", values="Count"):
+def render_donut_chart(df, names, values):
     fig = px.pie(df, names=names, values=values, hole=0.4)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_box_plot(df, y="CTC"):
+def render_box_plot(df, y):
     fig = px.box(df, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_bell_curve(df, x="Rating"):
+def render_bell_curve(df, x):
     fig = px.histogram(df, x=x, nbins=20)
     st.plotly_chart(fig, use_container_width=True)
