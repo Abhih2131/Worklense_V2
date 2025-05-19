@@ -5,7 +5,7 @@ import os
 import importlib
 from utils.data_handler import load_all_data, ensure_datetime, filter_dataframe
 
-st.set_page_config(page_title="HR BI App", layout="wide")
+st.set_page_config(page_title="Worklense", layout="wide")
 
 # === Inject global CSS ===
 try:
@@ -15,12 +15,12 @@ try:
 except FileNotFoundError:
     st.warning("Custom CSS file not found.")
 
-# === Header (sticky, premium) ===
+# === Header (Worklense brand) ===
 st.markdown("""
 <div class='custom-header'>
   <div class='header-left'>
-    <div class='brand-name'>HR BI Reports</div>
-    <div class='brand-tagline'>Modern Workforce Intelligence</div>
+    <div class='brand-name'>Worklense</div>
+    <div class='brand-tagline'>A Smarter Lens for Better Decisions</div>
   </div>
   <div class='header-right'>
     <a href="https://yourhelp.site" target="_blank">Help</a>
@@ -47,7 +47,7 @@ def get_report_modules():
 report_modules = get_report_modules()
 
 # --- Sidebar: Report select at top, then filter expander ---
-st.sidebar.title("HR BI Reports")
+st.sidebar.title("Worklense Reports")
 selected_report = st.sidebar.selectbox(
     "Select Report",
     report_modules,
@@ -100,7 +100,7 @@ if selected_report:
     else:
         st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
 
-# === Footer (sticky, premium) ===
+# === Footer (Worklense brand) ===
 st.markdown(
     "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
     unsafe_allow_html=True
