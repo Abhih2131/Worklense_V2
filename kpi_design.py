@@ -8,7 +8,7 @@ KPI_STYLE = {
     "width": "100%",
     "height": "96px",
     "value_font_size": "2.0rem",
-    "value_color": "#4359B8",
+    "value_color": "#E6E7EA",
     "label_font_size": "1.08rem",
     "label_color": "#080808",
     "label_bold": True,
