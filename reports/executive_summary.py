@@ -38,12 +38,12 @@ def prepare_attrition_data(df, fy_list):
     return merged[['FY', 'Attrition %']]
 
 def prepare_gender_data(df):
-    if 'gender' not in df.columns: return pd.DataFrame(columns=['Count'])
+    if 'gender' not in df.columns: return pd.DataFrame(columns=['Gender','Count'])
     df = df.copy()
     if 'date_of_exit' in df.columns:
         df = df[df['date_of_exit'].isna()]
     counts = df['gender'].value_counts().reset_index()
-    counts.columns = ['Count']
+    counts.columns = ['Gender', 'Count']
     return counts
 
 def prepare_age_distribution(df):
