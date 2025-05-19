@@ -4,8 +4,11 @@ import streamlit as st
 import os
 import importlib
 from utils.data_handler import load_all_data, ensure_datetime, filter_dataframe
+from theme_handler import selected_theme   # <--- Add this line
 
-st.set_page_config(page_title="Worklense", layout="wide")
+selected_theme()  # <--- And this line
+
+# (the rest of your code remains unchanged)
 
 # === Inject global CSS ===
 try:
