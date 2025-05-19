@@ -1,29 +1,27 @@
 # kpi_design.py
 
-# Central styling and formatter for all KPI cards
-
 KPI_STYLE = {
+    "background_color": "#f6f8fa",
+    "box_shadow": "0 2px 6px rgba(0,0,0,0.07)",
+    "border_radius": "16px",
+    "padding": "28px 6px",
     "box_width": 220,
-    "box_height": 110,
-    "background_color": "#f4f6fa",
-    "font_size_label": "1rem",
-    "font_size_value": "1.5rem",
+    "box_height": 120,
+    "font_size_label": "1.2rem",
+    "font_size_value": "2.1rem",
+    "value_color": "#21335b",
     "label_bold": True,
-    "value_color": "#0d47a1",
-    "box_shadow": "0 2px 10px #e3e3e3",
-    "border_radius": "18px",
-    "padding": "18px"
 }
 
 def format_kpi(value, kpi_type):
-    if value == "--":
-        return value
     if kpi_type == "Currency":
-        return f"₹{value:,.0f}"
-    if kpi_type == "Percentage":
+        value_in_cr = value / 1e7  # 1 Crore = 1e7
+        return f"₹{value_in_cr:,.0f} Cr"
+    elif kpi_type == "Percentage":
         return f"{value:.1f}%"
-    if kpi_type in ("Years", "Float"):
-        return f"{value:.1f}"
-    if kpi_type == "Integer":
+    elif kpi_type == "Years":
+        return f"{value:.1f} Yrs"
+    elif kpi_type == "Integer":
         return f"{int(value):,}"
-    return str(value)
+    else:
+        return str(value)
