@@ -79,18 +79,18 @@ def run_report(data, config):
     st.subheader("Charts")
 
     charts = [
-        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart),
-        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart),
-        ("Attrition Trend", prepare_attrition_data, render_line_chart),
-        ("Gender Diversity", prepare_gender_data, render_donut_chart),
-        ("Age Distribution", prepare_age_distribution, render_pie_chart),
-        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart),
-        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart),
-        ("Transfer % Trend", prepare_transfer_trend, render_line_chart),
-        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart),
-        ("Performance Distribution", prepare_performance_distribution, render_bell_curve),
-        ("Education Type Distribution", prepare_education_distribution, render_donut_chart),
-        ("Salary Distribution", prepare_salary_distribution, render_box_plot),
+        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart, {"x":"FY", "y":"Headcount"}),
+        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart, {"x":"FY", "y":"Total Cost"}),
+        ("Attrition Trend", prepare_attrition_data, render_line_chart, {"x":"FY", "y":"Attrition %"}),
+        ("Gender Diversity", prepare_gender_data, render_donut_chart, {"names":"Gender", "values":"Count"}),
+        ("Age Distribution", prepare_age_distribution, render_pie_chart, {"names":"Age Group", "values":"Count"}),
+        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart, {"names":"Tenure Group", "values":"Count"}),
+        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart, {"x":"Experience Group", "y":"Count"}),
+        ("Transfer % Trend", prepare_transfer_trend, render_line_chart, {"x":"FY", "y":"Transfer %"}),
+        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart, {"names":"Talent", "values":"Count"}),
+        ("Performance Distribution", prepare_performance_distribution, render_bell_curve, {"x":"Rating"}),
+        ("Education Type Distribution", prepare_education_distribution, render_donut_chart, {"names":"Qualification", "values":"Count"}),
+        ("Salary Distribution", prepare_salary_distribution, render_box_plot, {"y":"CTC"}),
     ]
 
     for i in range(0, len(charts), 2):
@@ -99,97 +99,49 @@ def run_report(data, config):
             idx = i + j
             if idx >= len(charts):
                 break
-            title, prep_func, render_func = charts[idx]
+            title, prep_func, render_func, params = charts[idx]
             data_chart = prep_func(filtered_df)
             with cols[j]:
                 st.subheader(title)
-                render_func(data_chart)
+                render_func(data_chart, **params)
 
-# Correct data prep returning required columns
+# Data prep functions (same dummy data as before)
 
 def prepare_manpower_growth_data(df):
-    # Prepare DataFrame with columns FY, Headcount
-    data = {
-        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
-        "Headcount": [16000, 17000, 18000, 15000, 16800]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Headcount":[16000,17000,18000,15000,16800]})
 
 def prepare_manpower_cost_data(df):
-    data = {
-        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
-        "Total Cost": [2200, 2400, 2500, 2000, 2100]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Total Cost":[2200,2400,2500,2000,2100]})
 
 def prepare_attrition_data(df):
-    data = {
-        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
-        "Attrition %": [12, 15, 13, 16, 14]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Attrition %":[12,15,13,16,14]})
 
 def prepare_gender_data(df):
-    data = {
-        "Gender": ["Female", "Male"],
-        "Count": [5000, 7000]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Gender":["Female","Male"],"Count":[5000,7000]})
 
 def prepare_age_distribution(df):
-    data = {
-        "Age Group": ["20-30", "31-40", "41-50", "51-60"],
-        "Count": [3000, 4000, 2500, 1500]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Age Group":["20-30","31-40","41-50","51-60"],"Count":[3000,4000,2500,1500]})
 
 def prepare_tenure_distribution(df):
-    data = {
-        "Tenure Group": ["0-1", "1-3", "3-5", "5-10", "10+"],
-        "Count": [1000, 3000, 2500, 3500, 1000]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Tenure Group":["0-1","1-3","3-5","5-10","10+"],"Count":[1000,3000,2500,3500,1000]})
 
 def prepare_experience_distribution(df):
-    data = {
-        "Experience Group": ["<1", "1-3", "3-5", "5-10", "10+"],
-        "Count": [1200, 2800, 2600, 3100, 1300]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Experience Group":["<1","1-3","3-5","5-10","10+"],"Count":[1200,2800,2600,3100,1300]})
 
 def prepare_transfer_trend(df):
-    data = {
-        "FY": ["FY-22", "FY-23", "FY-24", "FY-25", "FY-26"],
-        "Transfer %": [5, 6, 7, 6, 7]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Transfer %":[5,6,7,6,7]})
 
 def prepare_top_talent_data(df):
-    data = {
-        "Talent": ["Top", "Others"],
-        "Count": [1500, 6500]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Talent":["Top","Others"],"Count":[1500,6500]})
 
 def prepare_performance_distribution(df):
-    data = {
-        "Rating": [1, 2, 3, 4, 5],
-        "Count": [100, 200, 500, 700, 500]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Rating":[1,2,3,4,5],"Count":[100,200,500,700,500]})
 
 def prepare_education_distribution(df):
-    data = {
-        "Qualification": ["UG", "PG", "Diploma", "PhD"],
-        "Count": [4000, 3500, 2000, 500]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"Qualification":["UG","PG","Diploma","PhD"],"Count":[4000,3500,2000,500]})
 
 def prepare_salary_distribution(df):
-    data = {
-        "CTC": [1,2,3,4,5,6,7,8,9,10,11,12]
-    }
-    return pd.DataFrame(data)
+    return pd.DataFrame({"CTC":[1,2,3,4,5,6,7,8,9,10,11,12]})
 
 # Plotly renderers
 
