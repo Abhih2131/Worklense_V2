@@ -16,22 +16,35 @@ data_files = {
 data = load_all_data(data_files)
 config = {}
 
-# --- Centralized GLOBAL FILTERS ---
+# --- Sidebar Filter Summary (Side-by-Side Display, Not Selectable) ---
 st.sidebar.title("Filters")
 filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
-emp_df = data['employee_master']
-filter_dict = {}
-for col in filter_columns:
-    options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-    selected = st.sidebar.multiselect(
-        col.replace("_", " ").title(),
-        options=["All"] + options,
-        default=["All"],
-        key=f"sidebar_{col}"
-    )
-    filter_dict[col] = selected
 
-# --- Apply filter to all reports globally ---
+with st.sidebar:
+    st.markdown("#### Filter Status")
+    cols = st.columns(len(filter_columns))
+    for i, col in enumerate(filter_columns):
+        with cols[i]:
+            st.markdown(
+                f"""
+                <div style='
+                    background:#e7f2fb;
+                    border-radius:10px;
+                    padding:6px 8px;
+                    margin-bottom:4px;
+                    text-align:center;
+                    font-size:0.92rem;
+                    color:#19577a;
+                '>
+                <b>{col.replace('_', ' ').title()}</b><br>
+                <span style='font-size:1rem; color:#057fa6;'>All</span>
+                </div>
+                """, unsafe_allow_html=True
+            )
+
+# --- Prepare filtered data for reports (all "All", so not filtered) ---
+emp_df = data['employee_master']
+filter_dict = {col: [] for col in filter_columns}
 filtered_emp = filter_dataframe(emp_df, filter_dict)
 filtered_emp = ensure_datetime(filtered_emp, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
 data['employee_master'] = filtered_emp
