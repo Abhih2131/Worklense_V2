@@ -1,5 +1,3 @@
-# reports/executive_summary.py
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -12,14 +10,21 @@ def run_report(data, config):
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
 
-    # --- FILTERS (separate collapsible box at top) ---
+    # --- OPTIMIZED FILTERS (all in one pass, collapsible box) ---
+    filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
+    filters = []
     with st.container():
         with st.expander("Show Filters", expanded=False):
-            for col in ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]:
+            for col in filter_columns:
                 unique_vals = ["All"] + sorted([str(x) for x in emp_df[col].dropna().unique()])
                 selected = st.selectbox(col.replace("_", " ").title(), unique_vals, key=f"f_{col}")
                 if selected != "All":
-                    filtered_df = filtered_df[filtered_df[col] == selected]
+                    filters.append(filtered_df[col] == selected)
+    if filters:
+        combined_filter = filters[0]
+        for f in filters[1:]:
+            combined_filter &= f
+        filtered_df = filtered_df[combined_filter]
 
     # --- Ensure datetime columns after filtering ---
     filtered_df = ensure_datetime(filtered_df, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
