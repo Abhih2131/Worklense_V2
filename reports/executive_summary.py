@@ -12,7 +12,7 @@ def run_report(data, config):
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
 
-    # --- BEAUTIFUL SIDE-BY-SIDE MULTISELECT FILTERS ---
+    # --- BEAUTIFUL SIDE-BY-SIDE MULTISELECT FILTERS (SAFE VERSION) ---
     filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
     n_cols = 4  # filters per row
     filter_selections = {}
@@ -25,7 +25,11 @@ def run_report(data, config):
         )
         for row_start in range(0, len(filter_columns), n_cols):
             cols = st.columns(n_cols)
-            for i, col in enumerate(filter_columns[row_start:row_start+n_cols]):
+            for i in range(n_cols):
+                col_idx = row_start + i
+                if col_idx >= len(filter_columns):
+                    continue
+                col = filter_columns[col_idx]
                 with cols[i]:
                     options = sorted([str(x) for x in emp_df[col].dropna().unique()])
                     selected = st.multiselect(
@@ -115,4 +119,25 @@ def run_report(data, config):
                         background:{KPI_STYLE['background_color']};
                         box-shadow:{KPI_STYLE['box_shadow']};
                         border-radius:{KPI_STYLE['border_radius']};
-                        padding:{KPI_STYLE['padding']
+                        padding:{KPI_STYLE['padding']};
+                        width:{KPI_STYLE['box_width']}px;
+                        height:{KPI_STYLE['box_height']}px;
+                        text-align:center;
+                        display:flex;
+                        flex-direction:column;
+                        justify-content:center;
+                        align-items:center;">
+                        <span style="font-size:{KPI_STYLE['font_size_label']};font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};">
+                            {kpi['label']}
+                        </span>
+                        <span style="font-size:{KPI_STYLE['font_size_value']};color:{KPI_STYLE['value_color']};margin-top:10px;">
+                            {format_kpi(kpi['value'], kpi['type'])}
+                        </span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+    st.subheader("Charts")
+    st.info("Charts will appear here in future releases.")
+    st.button("Export KPIs to Excel (Coming Soon)")
