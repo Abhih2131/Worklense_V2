@@ -79,7 +79,7 @@ def run_report(data, config):
 
         # Display 4 per row
         display_labels = kpi_config["Display_Label"].tolist()
-        display_units = kpi_config["Unit"].tolist()
+        display_units = kpi_config["Unit"].tolist() if "Unit" in kpi_config.columns else [""] * len(kpi_config)
         kpi_types = kpi_config["KPI_Type"].tolist()
         show_flags = kpi_config["Show_By_Default"].tolist()
 
