@@ -2,7 +2,6 @@ import streamlit as st
 import plotly.io as pio
 
 def selected_theme():
-    # Set Streamlit page config for title and layout
     st.set_page_config(
         page_title="Worklense HR BI",
         page_icon="📊",
@@ -10,40 +9,31 @@ def selected_theme():
         initial_sidebar_state="expanded",
     )
 
-    # --- APP THEME SELECTOR ---
-    themes = {
-        "Light": "#f7f9fb",
-        "Classic Blue": "#eef4ff",
-        "Dark": "#1a2234"
+    plotly_themes = {
+        "Default": "plotly",
+        "White Classic": "plotly_white",
+        "GGPlot Style": "ggplot2",
+        "Seaborn Style": "seaborn",
+        "Simple White": "simple_white",
+        "Presentation": "presentation",
+        "Grid On": "gridon",
+        "No Theme (None)": "none"
     }
-    selected = st.sidebar.selectbox("Theme Selector", list(themes.keys()))
-    bg_color = themes[selected]
-    st.markdown(f"""
-        <style>
-        .stApp {{ background-color: {bg_color}; }}
-        </style>
-    """, unsafe_allow_html=True)
-
-    # --- PLOTLY CHART STYLE SELECTOR (Dynamic) ---
-    plotly_theme_names = list(pio.templates)
     plotly_theme_label = st.sidebar.selectbox(
         "Chart Style (Plotly Theme)",
-        options=plotly_theme_names,
+        options=list(plotly_themes.keys()),
         index=0
     )
-    st.session_state["plotly_template"] = plotly_theme_label
+    st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
 
-    # Inject global CSS for custom fonts and sidebar styling (your existing CSS)
     st.markdown(
         """
         <style>
-        /* Global font and background */
         body, .main, .stApp {
             font-family: 'Segoe UI', 'Inter', Arial, sans-serif !important;
             background: #f6f8fa !important;
             color: #22223b !important;
         }
-        /* Sidebar styling */
         section[data-testid="stSidebar"] {
             background: #142A4F !important;
             color: white !important;
