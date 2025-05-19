@@ -61,55 +61,55 @@ section[data-testid="stSidebar"] .stMultiSelect span[aria-label][data-baseweb="t
     z-index: 999;
 }
 
-/* ===== Premium KPI Card Styling ===== */
+/* ===== Compact KPI Card Styling ===== */
 .kpi-card {
     background: linear-gradient(135deg, #e8f0fa 80%, #c7d5ef 100%);
-    border-radius: 16px;
-    padding: 22px 16px 18px 16px;
+    border-radius: 19px;
+    padding: 14px 10px 12px 10px;
     text-align: center;
-    box-shadow: 0 6px 20px rgba(20,42,79,0.13);
-    min-height: 112px;
-    width: 222px;
-    margin-bottom: 13px;
+    box-shadow: 0 3px 12px rgba(36,52,84,0.09);
+    min-height: 82px;
+    width: 185px;
+    margin-bottom: 7px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: box-shadow 0.20s, transform 0.20s;
+    transition: box-shadow 0.17s, transform 0.16s;
     position: relative;
 }
 .kpi-card:hover {
-    box-shadow: 0 14px 34px rgba(20,42,79,0.22), 0 0 12px 2px #1953ff3a;
-    transform: scale(1.035);
+    box-shadow: 0 8px 26px rgba(60,72,127,0.18);
+    transform: scale(1.03);
 }
 
 /* Accent bar with glow effect */
 .kpi-accent {
     height: 4px;
-    width: 40px;
+    width: 32px;
     background: linear-gradient(90deg, #36d1dc 0%, #5b86e5 100%);
     border-radius: 5px;
-    margin-bottom: 12px;
-    box-shadow: 0 0 8px #36d1dc88, 0 0 12px #5b86e544;
+    margin-bottom: 7px;
+    box-shadow: 0 0 8px #36d1dc66, 0 0 10px #5b86e544;
 }
 
 /* KPI Label & Value */
 .kpi-label {
-    font-size: 15px;
+    font-size: 13.5px;
     font-weight: 700;
-    color: #1A2340;
-    opacity: 0.97;
-    margin-bottom: 4px;
-    letter-spacing: 0.12px;
-    text-shadow: 0 1px 2px #19274a44;
+    color: #25476a;
+    opacity: 0.92;
+    margin-bottom: 2px;
+    letter-spacing: 0.10px;
+    text-shadow: 0 1px 2px #dbeafe55;
 }
 .kpi-value {
-    font-size: 23px;
+    font-size: 19px;
     font-weight: 700;
     color: #1A2340;
-    margin-top: 4px;
+    margin-top: 2px;
     white-space: nowrap;
-    text-shadow: 0 1.5px 4px #19274a2a;
+    text-shadow: 0 1.5px 4px #dbeafe3c;
 }
 
 /* ===== Main Content Area ===== */
@@ -126,5 +126,5 @@ section.main > div {
 /* ===== Uniform Spacing for Columns ===== */
 div[class^="stColumn"] > div {
     height: 100%;
-    padding: 8px;
+    padding: 5px;
 }
