@@ -1,3 +1,10 @@
 streamlit
 pandas
 openpyxl
+plotly
+matplotlib
+seaborn
+altair
+bokeh
+holoviews
+cufflinks
