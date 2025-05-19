@@ -4,23 +4,14 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from kpi_design import KPI_STYLE, format_kpi
+from utils.data_handler import ensure_datetime
 
 def run_report(data, config):
     st.title("Executive Summary")
 
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
-
-    # --- FILTERS (optional: enable if you want) ---
-    # Uncomment the next lines if you want filters at the top
-    # with st.expander("Filters", expanded=False):
-    #     for col in ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]:
-    #         unique_vals = ["All"] + sorted([str(x) for x in emp_df[col].dropna().unique()])
-    #         selected = st.selectbox(col.replace("_", " ").title(), unique_vals)
-    #         if selected != "All":
-    #             filtered_df = filtered_df[filtered_df[col] == selected]
-
-    # --- KPI LOGIC ---
+    filtered_df = ensure_datetime(filtered_df, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
 
     today = pd.Timestamp.now().normalize()
     fy_start = pd.Timestamp('2025-04-01')
@@ -64,7 +55,7 @@ def run_report(data, config):
     # Avg Total Exp (years)
     avg_total_exp = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
 
-    # --- KPI Display Data (Edit for your preferred order/labels) ---
+    # --- KPI Display Data ---
     kpis = [
         {"label": "Active Employees", "value": active, "type": "Integer"},
         {"label": "Attrition Rate (FY 25-26)", "value": attrition, "type": "Percentage"},
@@ -76,14 +67,12 @@ def run_report(data, config):
         {"label": "Avg Total Exp (yrs)", "value": avg_total_exp, "type": "Years"},
     ]
 
-    # --- KPI DISPLAY (Design-driven) ---
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
             idx = i + j
             if idx >= len(kpis): break
             kpi = kpis[idx]
-            # Render with design
             with cols[j]:
                 st.markdown(
                     f"""
@@ -110,9 +99,6 @@ def run_report(data, config):
                     unsafe_allow_html=True
                 )
 
-    # --- Charts Placeholder ---
     st.subheader("Charts")
     st.info("Charts will appear here in future releases.")
-
-    # --- Export Placeholder ---
     st.button("Export KPIs to Excel (Coming Soon)")
