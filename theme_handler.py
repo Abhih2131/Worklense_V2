@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.io as pio
 
 def selected_theme():
     # Set Streamlit page config for title and layout
@@ -23,23 +24,14 @@ def selected_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    # --- PLOTLY CHART STYLE SELECTOR ---
-    plotly_themes = {
-        "Default": "plotly",
-        "White Classic": "plotly_white",
-        "GGPlot Style": "ggplot2",
-        "Seaborn Style": "seaborn",
-        "Simple White": "simple_white",
-        "Presentation": "presentation",
-        "Grid On": "gridon",
-        "No Theme (None)": "none"
-    }
+    # --- PLOTLY CHART STYLE SELECTOR (Dynamic) ---
+    plotly_theme_names = list(pio.templates)
     plotly_theme_label = st.sidebar.selectbox(
         "Chart Style (Plotly Theme)",
-        options=list(plotly_themes.keys()),
+        options=plotly_theme_names,
         index=0
     )
-    st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
+    st.session_state["plotly_template"] = plotly_theme_label
 
     # Inject global CSS for custom fonts and sidebar styling (your existing CSS)
     st.markdown(
