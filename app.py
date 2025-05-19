@@ -15,6 +15,19 @@ try:
 except FileNotFoundError:
     st.warning("Custom CSS file not found.")
 
+# === Header (sticky, premium) ===
+st.markdown("""
+<div class='custom-header'>
+  <div class='header-left'>
+    <div class='brand-name'>HR BI Reports</div>
+    <div class='brand-tagline'>Modern Workforce Intelligence</div>
+  </div>
+  <div class='header-right'>
+    <a href="https://yourhelp.site" target="_blank">Help</a>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 # --- Data load ---
 data_files = {
     'employee_master': 'data/employee_master.xlsx',
@@ -87,3 +100,9 @@ if selected_report:
         mod.run_report(data, config)
     else:
         st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
+
+# === Footer (sticky, premium) ===
+st.markdown(
+    "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
+    unsafe_allow_html=True
+)
