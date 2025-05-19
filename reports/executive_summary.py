@@ -4,23 +4,21 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 from kpi_design import KPI_STYLE, format_kpi
-from utils.data_handler import ensure_datetime
 
 def run_report(data, config):
     st.title("Executive Summary")
 
-    # --- Load centrally filtered data ---
-    emp_df = data.get("employee_master", pd.DataFrame())
-    filtered_df = emp_df.copy()
-    filtered_df = ensure_datetime(filtered_df, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
+    # Use globally filtered employee data from app.py
+    filtered_df = data.get("employee_master", pd.DataFrame())
 
     today = pd.Timestamp.now().normalize()
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
     # Active Employees (as of today)
-    mask_active = (filtered_df['date_of_joining'] <= today) & \
-        ((filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today))
+    mask_active = (filtered_df['date_of_joining'] <= today) & (
+        (filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today)
+    )
     active = mask_active.sum()
 
     # Attrition Rate FY 2025-26
@@ -49,7 +47,8 @@ def run_report(data, config):
     # Avg Age (years)
     now = datetime.now()
     def calc_age(dob):
-        if pd.isnull(dob): return None
+        if pd.isnull(dob):
+            return None
         return (now - pd.to_datetime(dob)).days // 365
     avg_age = filtered_df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in filtered_df else 0
 
@@ -68,12 +67,12 @@ def run_report(data, config):
         {"label": "Avg Total Exp (yrs)", "value": avg_total_exp, "type": "Years"},
     ]
 
-    # --- KPI DISPLAY (Design-driven) ---
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
             idx = i + j
-            if idx >= len(kpis): break
+            if idx >= len(kpis):
+                break
             kpi = kpis[idx]
             with cols[j]:
                 st.markdown(
