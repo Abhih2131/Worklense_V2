@@ -14,8 +14,20 @@ def render_kpi_card(label, value):
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
 
-# --- PLOTLY THEME SELECTOR (USER-FRIENDLY) ---
-def plotly_theme_selector():
+def theme_selector():
+    themes = {
+        "Light": "#f7f9fb",
+        "Classic Blue": "#eef4ff",
+        "Dark": "#1a2234"
+    }
+    selected = st.sidebar.selectbox("Theme Selector", list(themes.keys()))
+    bg_color = themes[selected]
+    st.markdown(f"""
+        <style>
+        .stApp {{ background-color: {bg_color}; }}
+        </style>
+    """, unsafe_allow_html=True)
+
     plotly_themes = {
         "Default": "plotly",
         "White Classic": "plotly_white",
@@ -141,21 +153,6 @@ def render_donut_chart(df, names, values):
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0.5, template=template)
     st.plotly_chart(fig, use_container_width=True)
-
-def theme_selector():
-    themes = {
-        "Light": "#f7f9fb",
-        "Classic Blue": "#eef4ff",
-        "Dark": "#1a2234"
-    }
-    selected = st.sidebar.selectbox("Theme Selector", list(themes.keys()))
-    bg_color = themes[selected]
-    st.markdown(f"""
-        <style>
-        .stApp {{ background-color: {bg_color}; }}
-        </style>
-    """, unsafe_allow_html=True)
-    plotly_theme_selector()  # Add the Plotly chart theme selector below app theme selector
 
 def run_report(data, config):
     theme_selector()
