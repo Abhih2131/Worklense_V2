@@ -1,3 +1,5 @@
+# app.py
+
 import streamlit as st
 import os
 import importlib
@@ -44,7 +46,7 @@ filter_dict = {}
 with st.sidebar.expander("Show Filters", expanded=False):
     n_cols = 2  # Two filters per row
     for row_start in range(0, len(filter_columns), n_cols):
-        cols = st.columns(n_cols)
+        cols = st.sidebar.columns(n_cols)
         for i in range(n_cols):
             col_idx = row_start + i
             if col_idx >= len(filter_columns):
@@ -52,24 +54,16 @@ with st.sidebar.expander("Show Filters", expanded=False):
             col = filter_columns[col_idx]
             options = sorted([str(x) for x in emp_df[col].dropna().unique()])
             key = f"sidebar_{col}"
-
-            # --- Custom: Only show pills if not all selected, else show "All" label ---
-            selected = st.session_state.get(key, options)
             with cols[i]:
-                st.write(f"**{col.replace('_', ' ').title()}**")
+                selected = st.multiselect(
+                    col.replace("_", " ").title(),
+                    options=options,
+                    default=options,
+                    key=key
+                )
                 if set(selected) == set(options):
-                    st.text_input(" ", value="All", key=f"all_{col}", disabled=True, label_visibility="collapsed")
-                    filter_dict[col] = options
-                else:
-                    chosen = st.multiselect(
-                        "",
-                        options=options,
-                        default=selected,
-                        key=key,
-                        label_visibility="collapsed"
-                    )
-                    filter_dict[col] = chosen
-                    st.session_state[key] = chosen
+                    st.caption("All selected")
+                filter_dict[col] = selected
 
 # --- Apply filter to all reports globally ---
 filtered_emp = filter_dataframe(emp_df, filter_dict)
