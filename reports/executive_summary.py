@@ -33,7 +33,7 @@ def run_report(data, config):
     # Joiners (FY 2025-26)
     joiners = filtered_df['date_of_joining'].between(fy_start, fy_end).sum()
 
-    # Total Cost (INR)
+    # Total Cost (INR) - shown in Cr
     total_cost = filtered_df['total_ctc_pa'].sum()
 
     # Female Ratio (active as of today)
@@ -62,9 +62,9 @@ def run_report(data, config):
         {"label": "Joiners (FY 25-26)", "value": joiners, "type": "Integer"},
         {"label": "Total Cost (INR)", "value": total_cost, "type": "Currency"},
         {"label": "Female Ratio", "value": female_ratio, "type": "Percentage"},
-        {"label": "Avg Tenure (yrs)", "value": avg_tenure, "type": "Years"},
+        {"label": "Avg Tenure", "value": avg_tenure, "type": "Years"},
         {"label": "Avg Age", "value": avg_age, "type": "Years"},
-        {"label": "Avg Total Exp (yrs)", "value": avg_total_exp, "type": "Years"},
+        {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
 
     for i in range(0, len(kpis), 4):
