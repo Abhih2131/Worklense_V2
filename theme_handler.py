@@ -1,5 +1,4 @@
 import streamlit as st
-import plotly.io as pio
 
 def selected_theme():
     st.set_page_config(
@@ -9,6 +8,7 @@ def selected_theme():
         initial_sidebar_state="expanded",
     )
 
+    # Define available Plotly themes
     plotly_themes = {
         "White Classic": "plotly_white",
         "GGPlot Style": "ggplot2",
@@ -16,7 +16,9 @@ def selected_theme():
         "Simple White": "simple_white",
         "Presentation": "presentation",
         "Grid On": "gridon",
-            }
+    }
+
+    # Chart style selector (single instance, in the sidebar)
     plotly_theme_label = st.sidebar.selectbox(
         "Chart Style (Plotly Theme)",
         options=list(plotly_themes.keys()),
@@ -24,6 +26,7 @@ def selected_theme():
     )
     st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
 
+    # Global app and sidebar style
     st.markdown(
         """
         <style>
