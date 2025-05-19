@@ -46,9 +46,12 @@ with st.sidebar.expander("Show Filters", expanded=False):
         selected = st.multiselect(
             col.replace("_", " ").title(),
             options=options,
-            default=options,  # All options selected by default
+            default=options,
             key=f"sidebar_{col}"
         )
+        # Show clean "All selected" message if all options are selected
+        if set(selected) == set(options):
+            st.caption("All selected")
         filter_dict[col] = selected
 
 # --- Apply filter to all reports globally ---
