@@ -20,7 +20,7 @@ def run_report(data, config):
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
-    # KPIs calculation (same logic as before)
+    # KPI calculations
     mask_active = (filtered_df['date_of_joining'] <= today) & (
         (filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today)
     )
@@ -78,42 +78,68 @@ def run_report(data, config):
 
     st.subheader("Charts")
 
-    # Chart 1: Manpower Growth (line chart)
-    manpower_growth_data = prepare_manpower_growth_data(filtered_df)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Manpower Growth")
-        render_line_chart(manpower_growth_data, x="FY", y="Headcount")
+    charts = [
+        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart),
+        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart),
+        ("Attrition Trend", prepare_attrition_data, render_line_chart),
+        ("Gender Diversity", prepare_gender_data, render_donut_chart),
+        ("Age Distribution", prepare_age_distribution, render_pie_chart),
+        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart),
+        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart),
+        ("Transfer % Trend", prepare_transfer_trend, render_line_chart),
+        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart),
+        ("Performance Distribution", prepare_performance_distribution, render_bell_curve),
+        ("Education Type Distribution", prepare_education_distribution, render_donut_chart),
+        ("Salary Distribution", prepare_salary_distribution, render_box_plot),
+    ]
 
-    # Chart 2: Manpower Cost Trend (bar chart)
-    manpower_cost_data = prepare_manpower_cost_data(filtered_df)
-    with col2:
-        st.subheader("Manpower Cost Trend")
-        render_bar_chart(manpower_cost_data, x="FY", y="Total Cost")
+    for i in range(0, len(charts), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            idx = i + j
+            if idx >= len(charts):
+                break
+            title, prep_func, render_func = charts[idx]
+            data_chart = prep_func(filtered_df)
+            with cols[j]:
+                st.subheader(title)
+                render_func(data_chart)
 
-    # Additional charts placeholders
-    # Repeat similar blocks as needed with st.columns for side-by-side
+# Placeholder data prep functions
+def prepare_manpower_growth_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Headcount":[16000,17000]})
+def prepare_manpower_cost_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Total Cost":[2200,2400]})
+def prepare_attrition_data(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Attrition %":[12,15]})
+def prepare_gender_data(df): return pd.DataFrame({"Gender":["Female","Male"],"Count":[50,50]})
+def prepare_age_distribution(df): return pd.DataFrame({"Age Group":["20-30","31-40"],"Count":[300,200]})
+def prepare_tenure_distribution(df): return pd.DataFrame({"Tenure Group":["0-1","1-3"],"Count":[150,350]})
+def prepare_experience_distribution(df): return pd.DataFrame({"Experience Group":["0-5","5-10"],"Count":[400,100]})
+def prepare_transfer_trend(df): return pd.DataFrame({"FY":["FY-22","FY-23"],"Transfer %":[2,3]})
+def prepare_top_talent_data(df): return pd.DataFrame({"Talent":["Top","Others"],"Count":[100,400]})
+def prepare_performance_distribution(df): return pd.DataFrame({"Rating":[1,2,3,4,5],"Count":[5,15,25,30,25]})
+def prepare_education_distribution(df): return pd.DataFrame({"Qualification":["UG","PG"],"Count":[250,150]})
+def prepare_salary_distribution(df): return pd.DataFrame({"CTC":[1,2,3,4,5,6,7,8,9,10]})
 
-def prepare_manpower_growth_data(df):
-    # Dummy example: group by FY and count active employees
-    fy_data = {
-        "FY": ["FY-2022", "FY-2023", "FY-2024", "FY-2025", "FY-2026"],
-        "Headcount": [16000, 17000, 18000, 15000, 16800]
-    }
-    return pd.DataFrame(fy_data)
-
-def prepare_manpower_cost_data(df):
-    # Dummy example: group by FY and sum cost (in Cr)
-    fy_data = {
-        "FY": ["FY-2022", "FY-2023", "FY-2024", "FY-2025", "FY-2026"],
-        "Total Cost": [2200, 2400, 2500, 2000, 2100]
-    }
-    return pd.DataFrame(fy_data)
-
-def render_line_chart(df, x, y):
+# Placeholder render functions using Plotly
+def render_line_chart(df, x="FY", y="Headcount"):
     fig = px.line(df, x=x, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
-def render_bar_chart(df, x, y):
+def render_bar_chart(df, x="FY", y="Total Cost"):
     fig = px.bar(df, x=x, y=y)
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_pie_chart(df, names="Age Group", values="Count"):
+    fig = px.pie(df, names=names, values=values)
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_donut_chart(df, names="Gender", values="Count"):
+    fig = px.pie(df, names=names, values=values, hole=0.4)
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_box_plot(df, y="CTC"):
+    fig = px.box(df, y=y)
+    st.plotly_chart(fig, use_container_width=True)
+
+def render_bell_curve(df, x="Rating"):
+    fig = px.histogram(df, x=x, nbins=20)
     st.plotly_chart(fig, use_container_width=True)
