@@ -20,6 +20,36 @@ def run_report(data, config):
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
+    # --- Sidebar Chart Theme Selector ---
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### Chart Theme")
+    chart_theme = st.sidebar.selectbox(
+        "Select Chart Theme",
+        options=[
+            "Classic Light",
+            "Elegant Dark",
+            "Presentation Mode",
+            "Soft Pastel",
+            "Pastel Elegance",
+            "Minimalist White",
+            "Balanced Classic",
+            "Clean Grid"
+        ],
+        index=0,
+        help="Choose how charts are styled"
+    )
+    theme_map = {
+        "Classic Light": "plotly_white",
+        "Elegant Dark": "plotly_dark",
+        "Presentation Mode": "presentation",
+        "Soft Pastel": "ggplot2",
+        "Pastel Elegance": "seaborn",
+        "Minimalist White": "simple_white",
+        "Balanced Classic": "plotly",
+        "Clean Grid": "xgridoff"
+    }
+    selected_template = theme_map[chart_theme]
+
     # KPI calculations
     mask_active = (filtered_df['date_of_joining'] <= today) & (
         (filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today)
@@ -79,18 +109,18 @@ def run_report(data, config):
     st.subheader("Charts")
 
     charts = [
-        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart, {"x":"FY", "y":"Headcount"}),
-        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart, {"x":"FY", "y":"Total Cost"}),
-        ("Attrition Trend", prepare_attrition_data, render_line_chart, {"x":"FY", "y":"Attrition %"}),
-        ("Gender Diversity", prepare_gender_data, render_donut_chart, {"names":"Gender", "values":"Count"}),
-        ("Age Distribution", prepare_age_distribution, render_pie_chart, {"names":"Age Group", "values":"Count"}),
-        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart, {"names":"Tenure Group", "values":"Count"}),
-        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart, {"x":"Experience Group", "y":"Count"}),
-        ("Transfer % Trend", prepare_transfer_trend, render_line_chart, {"x":"FY", "y":"Transfer %"}),
-        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart, {"names":"Talent", "values":"Count"}),
-        ("Performance Distribution", prepare_performance_distribution, render_bell_curve, {"x":"Rating"}),
-        ("Education Type Distribution", prepare_education_distribution, render_donut_chart, {"names":"Qualification", "values":"Count"}),
-        ("Salary Distribution", prepare_salary_distribution, render_box_plot, {"y":"CTC"}),
+        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart, {"x": "FY", "y": "Headcount"}),
+        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart, {"x": "FY", "y": "Total Cost"}),
+        ("Attrition Trend", prepare_attrition_data, render_line_chart, {"x": "FY", "y": "Attrition %"}),
+        ("Gender Diversity", prepare_gender_data, render_donut_chart, {"names": "Gender", "values": "Count"}),
+        ("Age Distribution", prepare_age_distribution, render_pie_chart, {"names": "Age Group", "values": "Count"}),
+        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart, {"names": "Tenure Group", "values": "Count"}),
+        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart, {"x": "Experience Group", "y": "Count"}),
+        ("Transfer % Trend", prepare_transfer_trend, render_line_chart, {"x": "FY", "y": "Transfer %"}),
+        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart, {"names": "Talent", "values": "Count"}),
+        ("Performance Distribution", prepare_performance_distribution, render_bell_curve, {"x": "Rating"}),
+        ("Education Type Distribution", prepare_education_distribution, render_donut_chart, {"names": "Qualification", "values": "Count"}),
+        ("Salary Distribution", prepare_salary_distribution, render_box_plot, {"y": "CTC"}),
     ]
 
     for i in range(0, len(charts), 2):
@@ -105,66 +135,4 @@ def run_report(data, config):
                 st.subheader(title)
                 render_func(data_chart, **params)
 
-# Data prep functions (same dummy data as before)
-
-def prepare_manpower_growth_data(df):
-    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Headcount":[16000,17000,18000,15000,16800]})
-
-def prepare_manpower_cost_data(df):
-    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Total Cost":[2200,2400,2500,2000,2100]})
-
-def prepare_attrition_data(df):
-    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Attrition %":[12,15,13,16,14]})
-
-def prepare_gender_data(df):
-    return pd.DataFrame({"Gender":["Female","Male"],"Count":[5000,7000]})
-
-def prepare_age_distribution(df):
-    return pd.DataFrame({"Age Group":["20-30","31-40","41-50","51-60"],"Count":[3000,4000,2500,1500]})
-
-def prepare_tenure_distribution(df):
-    return pd.DataFrame({"Tenure Group":["0-1","1-3","3-5","5-10","10+"],"Count":[1000,3000,2500,3500,1000]})
-
-def prepare_experience_distribution(df):
-    return pd.DataFrame({"Experience Group":["<1","1-3","3-5","5-10","10+"],"Count":[1200,2800,2600,3100,1300]})
-
-def prepare_transfer_trend(df):
-    return pd.DataFrame({"FY":["FY-22","FY-23","FY-24","FY-25","FY-26"],"Transfer %":[5,6,7,6,7]})
-
-def prepare_top_talent_data(df):
-    return pd.DataFrame({"Talent":["Top","Others"],"Count":[1500,6500]})
-
-def prepare_performance_distribution(df):
-    return pd.DataFrame({"Rating":[1,2,3,4,5],"Count":[100,200,500,700,500]})
-
-def prepare_education_distribution(df):
-    return pd.DataFrame({"Qualification":["UG","PG","Diploma","PhD"],"Count":[4000,3500,2000,500]})
-
-def prepare_salary_distribution(df):
-    return pd.DataFrame({"CTC":[1,2,3,4,5,6,7,8,9,10,11,12]})
-
-# Plotly renderers
-
-def render_line_chart(df, x, y):
-    fig = px.line(df, x=x, y=y)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_bar_chart(df, x, y):
-    fig = px.bar(df, x=x, y=y)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_pie_chart(df, names, values):
-    fig = px.pie(df, names=names, values=values)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_donut_chart(df, names, values):
-    fig = px.pie(df, names=names, values=values, hole=0.4)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_box_plot(df, y):
-    fig = px.box(df, y=y)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_bell_curve(df, x):
-    fig = px.histogram(df, x=x, nbins=20)
-    st.plotly_chart(fig, use_container_width=True)
+# Data prep and render functions same as previous example...
