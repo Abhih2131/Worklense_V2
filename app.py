@@ -55,15 +55,18 @@ with st.sidebar.expander("Show Filters", expanded=False):
             options = sorted([str(x) for x in emp_df[col].dropna().unique()])
             key = f"sidebar_{col}"
             with cols[i]:
-                selected = st.multiselect(
+                chosen = st.multiselect(
                     col.replace("_", " ").title(),
                     options=options,
-                    default=options,
+                    default=[],
                     key=key
                 )
-                if set(selected) == set(options):
-                    st.caption("All selected")
-                filter_dict[col] = selected
+                # If nothing selected, treat as "All" and show a clean caption
+                if not chosen:
+                    st.caption("All")
+                    filter_dict[col] = options
+                else:
+                    filter_dict[col] = chosen
 
 # --- Apply filter to all reports globally ---
 filtered_emp = filter_dataframe(emp_df, filter_dict)
