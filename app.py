@@ -53,16 +53,16 @@ with st.sidebar.expander("Show Filters", expanded=False):
                 continue
             col = filter_columns[col_idx]
             options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+            key = f"sidebar_{col}"
             with cols[i]:
                 chosen = st.multiselect(
                     col.replace("_", " ").title(),
                     options=options,
                     default=[],
-                    key=f"sidebar_{col}"
+                    key=key
                 )
-                # If nothing selected, show "All" caption and treat as all selected for filtering
+                # If nothing selected, treat as "All" for filter logic
                 if not chosen:
-                    st.caption("All")
                     filter_dict[col] = options
                 else:
                     filter_dict[col] = chosen
