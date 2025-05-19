@@ -1,4 +1,35 @@
-# ... previous app.py code above ...
+import streamlit as st
+import os
+import importlib
+from utils.data_handler import load_all_data, ensure_datetime, filter_dataframe
+
+st.set_page_config(page_title="HR BI App", layout="wide")
+
+# --- Data load ---
+data_files = {
+    'employee_master': 'data/employee_master.xlsx',
+    'leave': 'data/HRMS_Leave.xlsx',
+    'sales': 'data/Sales_INR.xlsx'
+}
+data = load_all_data(data_files)
+config = {}
+
+# --- Modular report loading ---
+def get_report_modules():
+    report_folder = "reports"
+    files = [f for f in os.listdir(report_folder) if f.endswith(".py") and not f.startswith("__")]
+    modules = [f[:-3] for f in files]
+    return modules
+
+report_modules = get_report_modules()
+
+# --- Sidebar: Report select at top, then filter expander ---
+st.sidebar.title("HR BI Reports")
+selected_report = st.sidebar.selectbox(
+    "Select Report",
+    report_modules,
+    format_func=lambda x: x.replace("_", " ").title()
+)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Filters")
@@ -28,7 +59,6 @@ with st.sidebar.expander("Show Filters", expanded=False):
                 st.write(f"**{col.replace('_', ' ').title()}**")
                 if set(selected) == set(options):
                     st.text_input(" ", value="All", key=f"all_{col}", disabled=True, label_visibility="collapsed")
-                    # For backend: still pass all options as selected
                     filter_dict[col] = options
                 else:
                     chosen = st.multiselect(
@@ -46,4 +76,10 @@ filtered_emp = filter_dataframe(emp_df, filter_dict)
 filtered_emp = ensure_datetime(filtered_emp, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
 data['employee_master'] = filtered_emp
 
-# ... rest of app.py unchanged ...
+# --- Run the selected report ---
+if selected_report:
+    mod = importlib.import_module(f"reports.{selected_report}")
+    if hasattr(mod, "run_report"):
+        mod.run_report(data, config)
+    else:
+        st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
