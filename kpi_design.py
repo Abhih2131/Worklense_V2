@@ -1,7 +1,7 @@
 
 
 KPI_STYLE = {
-    "background": "#A2A6AA",
+    "background": "#416A93",
     "border_radius": "18px",
     "box_shadow": "0 2px 12px rgba(80,120,160,0.10)",
     "padding": "22px 0 10px 0",
