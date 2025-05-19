@@ -5,12 +5,6 @@
 KPI_STYLE = {
     # Soft gradients for up to 8 KPI cards
     "backgrounds": [
-        "linear-gradient(135deg, #e0ecfc 0%, #f8f9fc 100%)",   # Blue
-        "linear-gradient(135deg, #fceabb 0%, #f8f9fc 100%)",   # Yellow
-        "linear-gradient(135deg, #fceabb 0%, #f7f7f7 100%)",   # Gold
-        "linear-gradient(135deg, #e0fcf7 0%, #f8f9fc 100%)",   # Teal
-        "linear-gradient(135deg, #ffe1e9 0%, #f8f9fc 100%)",   # Pink
-        "linear-gradient(135deg, #dbeafe 0%, #f8f9fc 100%)",   # Light Blue
         "linear-gradient(135deg, #fee2f8 0%, #f8f9fc 100%)",   # Light Pink
         "linear-gradient(135deg, #f1f5f9 0%, #f8f9fc 100%)",   # Neutral
     ],
