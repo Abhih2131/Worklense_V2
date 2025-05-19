@@ -1,4 +1,5 @@
 
+
 # kpi_design.py
 
 KPI_STYLE = {
@@ -34,7 +35,7 @@ KPI_STYLE = {
     "kpi_value_margin_top": "3px",
     # Accent colors for KPI label bar
     "accent_colors": [
-        "#60a5fa", "#fbbf24", "#f59e42", "#34d399", "#f472b6", "#3b82f6", "#ec4899", "#64748b"
+        "#60a5fa", "#fbbf24"
     ]
 }
 
