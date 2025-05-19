@@ -220,4 +220,25 @@ def run_report(data, config):
         ("Attrition Trend", prepare_attrition_trend_data, render_line_chart, {"x": "FY", "y": "Attrition %"}),
         ("Gender Diversity", prepare_gender_diversity_data, render_donut_chart, {"names": "Gender", "values": "Count"}),
         ("Age Distribution", prepare_age_distribution_data, render_pie_chart, {"names": "Age Group", "values": "Count"}),
-        ("Tenure Distribution", prepare_tenure_distribution
+        ("Tenure Distribution", prepare_tenure_distribution_data, render_pie_chart, {"names": "Tenure", "values": "Count"}),
+        ("Total Experience Distribution", prepare_total_experience_distribution_data, render_bar_chart, {"x": "Total Exp", "y": "Count"}),
+        ("Transfer % Trend", prepare_transfer_trend_data, render_line_chart, {"x": "FY", "y": "Transfer %"}),
+        ("Top Talent Ratio", prepare_top_talent_ratio_data, render_pie_chart, {"names": "Talent", "values": "Count"}),
+        ("Performance Distribution", prepare_performance_distribution_data, render_bell_curve, {"col": "performance_rating"}),
+        # Add more as you need...
+    ]
+
+    for i in range(0, len(charts), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            idx = i + j
+            if idx >= len(charts):
+                break
+            title, prepare_func, render_func, params = charts[idx]
+            df_chart = prepare_func(filtered_df)
+            with cols[j]:
+                st.subheader(title)
+                if isinstance(params, dict):
+                    render_func(df_chart, **params, template=chart_theme)
+                else:
+                    render_func(df_chart, params, template=chart_theme)
