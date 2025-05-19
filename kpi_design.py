@@ -16,7 +16,7 @@ KPI_STYLE = {
     "font_size_label": "1.04rem",
     "font_size_value": "1.8rem",
     "value_color": "#111827",
-    "label_color": "#6366f1",    # Indigo
+    "label_color": "#080808",    # Indigo
     "label_bold": True,
     "accent_height": "4px",
     "accent_width": "44px",
