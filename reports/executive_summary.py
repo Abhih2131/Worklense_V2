@@ -81,29 +81,15 @@ def run_report(data, config):
 
     st.subheader("Charts")
 
-    # Sidebar selectors for chart types per metric
-    selected_charts = {}
-    st.sidebar.markdown("### Select Chart Types for Metrics")
-    for metric in CHART_CONFIG.keys():
-        options = CHART_CONFIG[metric]["chart_types"]
-        selected = st.sidebar.selectbox(
-            f"{CHART_CONFIG[metric]['description']}",
-            options,
-            index=0,
-            key=f"chart_type_{metric}"
-        )
-        selected_charts[metric] = selected
+    metric_list = list(CHART_CONFIG.keys())
 
-    # Chart rendering function mapper
     def get_renderer(metric, chart_type):
         config = CHART_CONFIG[metric]
         idx = config["chart_types"].index(chart_type)
         func_name = config["renderers"][idx]
-        # Assuming all rendering functions are imported or defined in scope
         return globals()[func_name]
 
-    # Layout charts two per row
-    metric_list = list(CHART_CONFIG.keys())
+    # Show charts two per row with inline chart-type selectors
     for i in range(0, len(metric_list), 2):
         cols = st.columns(2)
         for j in range(2):
@@ -111,16 +97,25 @@ def run_report(data, config):
             if idx >= len(metric_list):
                 break
             metric = metric_list[idx]
-            renderer = get_renderer(metric, selected_charts[metric])
-            # Prepare data specific for the metric (you must implement this part)
+
+            col_title, col_selector = st.columns([7, 3])
+            with col_title:
+                st.subheader(f"{CHART_CONFIG[metric]['description']}")
+            with col_selector:
+                chart_type = st.selectbox(
+                    "",
+                    CHART_CONFIG[metric]["chart_types"],
+                    index=0,
+                    key=f"chart_type_{metric}"
+                )
+
+            renderer = get_renderer(metric, chart_type)
             metric_data = prepare_metric_data(filtered_df, metric)
             with cols[j]:
-                st.subheader(f"{CHART_CONFIG[metric]['description']}")
                 renderer(metric_data)
 
     st.button("Export KPIs and Charts to Excel (Coming Soon)")
 
 def prepare_metric_data(df, metric):
-    # This is a placeholder: implement your data preparation logic per metric here
-    # Return the data in format expected by the chart renderers
+    # Implement data prep for each metric here
     pass
