@@ -2,32 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-
-def render_kpi_card(label, value):
-    return f"""
-    <div style='background:#fff;border-radius:22px;box-shadow:0 4px 16px rgba(44,58,92,.12);padding:16px 10px 14px 26px;min-height:78px;max-width:330px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;margin-bottom:18px;'>
-        <div style='font-weight:700;font-size:19px;color:#222;margin-bottom:3px'>{label}</div>
-        <div style='font-size:30px;font-weight:800;color:#1a237e;margin-top:2px;'>{value}</div>
-    </div>
-    """
+from kpi_design import render_kpi_card  # Import your new KPI card function
 
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
 
 def theme_selector():
-    themes = {
-        "Light": "#f7f9fb",
-        "Classic Blue": "#eef4ff",
-        "Dark": "#1a2234"
-    }
-    selected = st.sidebar.selectbox("Theme Selector", list(themes.keys()))
-    bg_color = themes[selected]
-    st.markdown(f"""
-        <style>
-        .stApp {{ background-color: {bg_color}; }}
-        </style>
-    """, unsafe_allow_html=True)
-
     plotly_themes = {
         "Default": "plotly",
         "White Classic": "plotly_white",
@@ -193,24 +173,19 @@ def run_report(data, config):
     avg_age = df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in df.columns else 0
     avg_total_exp = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df.columns else 0
 
-    total_cost_display = f"₹{total_cost / 1e7:,.0f} Cr"
-    attrition_display = f"{attrition:.1f}%"
-    female_ratio_display = f"{female_ratio:.1f}%"
-    avg_tenure_display = f"{avg_tenure:.1f} Yrs"
-    avg_age_display = f"{avg_age:.1f} Yrs"
-    avg_total_exp_display = f"{avg_total_exp:.1f} Yrs"
-
+    # Revised KPI definitions with types
     kpis = [
-        {"label": "Active Employees", "value": f"{int(active):,}"},
-        {"label": f"Attrition Rate (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": attrition_display},
-        {"label": f"Joiners (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": f"{int(joiners):,}"},
-        {"label": "Total Cost (INR)", "value": total_cost_display},
-        {"label": "Female Ratio", "value": female_ratio_display},
-        {"label": "Avg Tenure", "value": avg_tenure_display},
-        {"label": "Avg Age", "value": avg_age_display},
-        {"label": "Avg Total Exp", "value": avg_total_exp_display},
+        {"label": "Active Employees", "value": active, "type": "Integer"},
+        {"label": f"Attrition Rate (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": attrition, "type": "Percentage"},
+        {"label": f"Joiners (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": joiners, "type": "Integer"},
+        {"label": "Total Cost (INR)", "value": total_cost, "type": "Currency"},
+        {"label": "Female Ratio", "value": female_ratio, "type": "Percentage"},
+        {"label": "Avg Tenure", "value": avg_tenure, "type": "Years"},
+        {"label": "Avg Age", "value": avg_age, "type": "Years"},
+        {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
 
+    # Render KPI cards using new design
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
@@ -218,7 +193,7 @@ def run_report(data, config):
             if idx >= len(kpis): break
             kpi = kpis[idx]
             with cols[j]:
-                st.markdown(render_kpi_card(kpi['label'], kpi['value']), unsafe_allow_html=True)
+                st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type'], idx), unsafe_allow_html=True)
 
     charts = [
         ("Manpower Growth", lambda df: prepare_manpower_growth_data(df, fy_list), render_line_chart, {"x": "FY", "y": "Headcount"}),
@@ -249,8 +224,7 @@ def run_report(data, config):
 # streamlit run app.py
 
 # UAT Checklist:
-# - KPIs show with design as required.
-# - 5-year charts for Manpower, Cost, Attrition.
-# - Plotly chart theme selector working.
-# - All 8 charts display, 2 per row.
-# - Layout and data correct.
+# - Only "Chart Style (Plotly Theme)" in sidebar, no theme selector.
+# - All KPI cards use new design from kpi_design.py.
+# - KPIs and chart data/format are correct.
+# - 8 charts display, 2 per row, layout smooth.
