@@ -80,109 +80,52 @@ def run_report(data, config):
 
     st.subheader("Charts")
 
-    # Chart rendering calls (fixed types as per final list)
+    # List of chart functions & their data preparation funcs (dummy placeholders)
+    charts = [
+        ("Manpower Growth", prepare_manpower_growth_data, render_line_chart),
+        ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart),
+        ("Attrition Trend", prepare_attrition_data, render_line_chart),
+        ("Gender Diversity", prepare_gender_data, render_donut_chart),
+        ("Age Distribution", prepare_age_distribution, render_pie_chart),
+        ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart),
+        ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart),
+        ("Transfer % Trend", prepare_transfer_trend, render_line_chart),
+        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart),
+        ("Performance Distribution", prepare_performance_distribution, render_bell_curve),
+        ("Education Type Distribution", prepare_education_distribution, render_donut_chart),
+        ("Salary Distribution", prepare_salary_distribution, render_box_plot),
+    ]
 
-    # 1. Manpower Growth (line chart)
-    manpower_growth_data = prepare_manpower_growth_data(filtered_df)
-    render_line_chart(manpower_growth_data, x="FY", y="Headcount", title="Manpower Growth")
+    # Render two charts side by side per row
+    for i in range(0, len(charts), 2):
+        cols = st.columns(2)
+        for j in range(2):
+            idx = i + j
+            if idx >= len(charts):
+                break
+            title, prep_func, render_func = charts[idx]
+            data_chart = prep_func(filtered_df)
+            with cols[j]:
+                st.subheader(title)
+                render_func(data_chart)
 
-    # 2. Manpower Cost Trend (bar chart)
-    manpower_cost_data = prepare_manpower_cost_data(filtered_df)
-    render_bar_chart(manpower_cost_data, x="FY", y="Total Cost", title="Manpower Cost Trend")
+# Dummy placeholders for data prep and rendering functions
+def prepare_manpower_growth_data(df): pass
+def prepare_manpower_cost_data(df): pass
+def prepare_attrition_data(df): pass
+def prepare_gender_data(df): pass
+def prepare_age_distribution(df): pass
+def prepare_tenure_distribution(df): pass
+def prepare_experience_distribution(df): pass
+def prepare_transfer_trend(df): pass
+def prepare_top_talent_data(df): pass
+def prepare_performance_distribution(df): pass
+def prepare_education_distribution(df): pass
+def prepare_salary_distribution(df): pass
 
-    # 3. Attrition Trend (line chart)
-    attrition_data = prepare_attrition_data(filtered_df)
-    render_line_chart(attrition_data, x="FY", y="Attrition %", title="Attrition Trend")
-
-    # 4. Gender Diversity (donut chart)
-    gender_data = prepare_gender_data(filtered_df)
-    render_donut_chart(gender_data, names="Gender", values="Count", title="Gender Diversity")
-
-    # 5. Age Distribution (pie chart)
-    age_data = prepare_age_distribution(filtered_df)
-    render_pie_chart(age_data, names="Age Group", values="Count", title="Age Distribution")
-
-    # 6. Tenure Distribution (pie chart)
-    tenure_data = prepare_tenure_distribution(filtered_df)
-    render_pie_chart(tenure_data, names="Tenure Group", values="Count", title="Tenure Distribution")
-
-    # 7. Total Experience Distribution (bar chart)
-    exp_data = prepare_experience_distribution(filtered_df)
-    render_bar_chart(exp_data, x="Experience Group", y="Count", title="Total Experience Distribution")
-
-    # 8. Transfer % Trend (line chart)
-    transfer_data = prepare_transfer_trend(filtered_df)
-    render_line_chart(transfer_data, x="FY", y="Transfer %", title="Transfer % Trend")
-
-    # 9. Top Talent Ratio (pie chart)
-    talent_data = prepare_top_talent_data(filtered_df)
-    render_pie_chart(talent_data, names="Talent", values="Count", title="Top Talent Ratio")
-
-    # 10. Performance Distribution (bell curve)
-    perf_data = prepare_performance_distribution(filtered_df)
-    render_bell_curve(perf_data, x="Rating", title="Performance Distribution")
-
-    # 11. Education Type Distribution (donut chart)
-    edu_data = prepare_education_distribution(filtered_df)
-    render_donut_chart(edu_data, names="Qualification", values="Count", title="Education Type Distribution")
-
-    # 12. Salary Distribution (box plot)
-    salary_data = prepare_salary_distribution(filtered_df)
-    render_box_plot(salary_data, y="CTC", title="Salary Distribution (CTC)")
-
-def prepare_manpower_growth_data(df):
-    # Your implementation here
-    pass
-
-def prepare_manpower_cost_data(df):
-    pass
-
-def prepare_attrition_data(df):
-    pass
-
-def prepare_gender_data(df):
-    pass
-
-def prepare_age_distribution(df):
-    pass
-
-def prepare_tenure_distribution(df):
-    pass
-
-def prepare_experience_distribution(df):
-    pass
-
-def prepare_transfer_trend(df):
-    pass
-
-def prepare_top_talent_data(df):
-    pass
-
-def prepare_performance_distribution(df):
-    pass
-
-def prepare_education_distribution(df):
-    pass
-
-def prepare_salary_distribution(df):
-    pass
-
-# Dummy renderer function placeholders
-
-def render_line_chart(data, x, y, title):
-    st.write(f"Line Chart: {title}")
-
-def render_bar_chart(data, x, y, title):
-    st.write(f"Bar Chart: {title}")
-
-def render_pie_chart(data, names, values, title):
-    st.write(f"Pie Chart: {title}")
-
-def render_donut_chart(data, names, values, title):
-    st.write(f"Donut Chart: {title}")
-
-def render_box_plot(data, y, title):
-    st.write(f"Box Plot: {title}")
-
-def render_bell_curve(data, x, title):
-    st.write(f"Bell Curve: {title}")
+def render_line_chart(data): st.write("Line chart placeholder")
+def render_bar_chart(data): st.write("Bar chart placeholder")
+def render_pie_chart(data): st.write("Pie chart placeholder")
+def render_donut_chart(data): st.write("Donut chart placeholder")
+def render_box_plot(data): st.write("Box plot placeholder")
+def render_bell_curve(data): st.write("Bell curve placeholder")
