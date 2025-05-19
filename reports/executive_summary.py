@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-from kpi_design import render_kpi_card  # Use your new KPI card function
+from kpi_design import render_kpi_card
 
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
@@ -95,25 +95,28 @@ def prepare_education_distribution(df):
 def render_line_chart(df, x, y):
     template = st.session_state.get("plotly_template", "plotly")
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
-    fig = px.line(df, x=x, y=y, markers=True, template=template)
+    fig = px.line(df, x=x, y=y, markers=True, template=template, text=y)
+    fig.update_traces(textposition="top center")
     st.plotly_chart(fig, use_container_width=True)
 
 def render_bar_chart(df, x, y):
     template = st.session_state.get("plotly_template", "plotly")
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
-    fig = px.bar(df, x=x, y=y, template=template)
+    fig = px.bar(df, x=x, y=y, template=template, text_auto=True)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_pie_chart(df, names, values):
     template = st.session_state.get("plotly_template", "plotly")
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0, template=template)
+    fig.update_traces(textinfo='label+percent+value')
     st.plotly_chart(fig, use_container_width=True)
 
 def render_donut_chart(df, names, values):
     template = st.session_state.get("plotly_template", "plotly")
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0.5, template=template)
+    fig.update_traces(textinfo='label+percent+value')
     st.plotly_chart(fig, use_container_width=True)
 
 def run_report(data, config):
@@ -154,7 +157,6 @@ def run_report(data, config):
     avg_age = df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in df.columns else 0
     avg_total_exp = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df.columns else 0
 
-    # Revised KPI definitions with types
     kpis = [
         {"label": "Active Employees", "value": active, "type": "Integer"},
         {"label": f"Attrition Rate (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": attrition, "type": "Percentage"},
@@ -166,7 +168,6 @@ def run_report(data, config):
         {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
 
-    # Render KPI cards using new design
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
