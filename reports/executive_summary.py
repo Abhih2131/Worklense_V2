@@ -14,6 +14,25 @@ def render_kpi_card(label, value):
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
 
+# --- PLOTLY THEME SELECTOR (USER-FRIENDLY) ---
+def plotly_theme_selector():
+    plotly_themes = {
+        "Default": "plotly",
+        "White Classic": "plotly_white",
+        "GGPlot Style": "ggplot2",
+        "Seaborn Style": "seaborn",
+        "Simple White": "simple_white",
+        "Presentation": "presentation",
+        "Grid On": "gridon",
+        "No Theme (None)": "none"
+    }
+    plotly_theme_label = st.sidebar.selectbox(
+        "Chart Style (Plotly Theme)",
+        options=list(plotly_themes.keys()),
+        index=0
+    )
+    st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
+
 def prepare_manpower_growth_data(df, fy_list):
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
@@ -100,23 +119,27 @@ def prepare_education_distribution(df):
     return counts
 
 def render_line_chart(df, x, y):
+    template = st.session_state.get("plotly_template", "plotly")
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
-    fig = px.line(df, x=x, y=y, markers=True)
+    fig = px.line(df, x=x, y=y, markers=True, template=template)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_bar_chart(df, x, y):
+    template = st.session_state.get("plotly_template", "plotly")
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
-    fig = px.bar(df, x=x, y=y)
+    fig = px.bar(df, x=x, y=y, template=template)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_pie_chart(df, names, values):
+    template = st.session_state.get("plotly_template", "plotly")
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
-    fig = px.pie(df, names=names, values=values, hole=0)
+    fig = px.pie(df, names=names, values=values, hole=0, template=template)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_donut_chart(df, names, values):
+    template = st.session_state.get("plotly_template", "plotly")
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
-    fig = px.pie(df, names=names, values=values, hole=0.5)
+    fig = px.pie(df, names=names, values=values, hole=0.5, template=template)
     st.plotly_chart(fig, use_container_width=True)
 
 def theme_selector():
@@ -132,6 +155,7 @@ def theme_selector():
         .stApp {{ background-color: {bg_color}; }}
         </style>
     """, unsafe_allow_html=True)
+    plotly_theme_selector()  # Add the Plotly chart theme selector below app theme selector
 
 def run_report(data, config):
     theme_selector()
@@ -230,6 +254,6 @@ def run_report(data, config):
 # UAT Checklist:
 # - KPIs show with design as required.
 # - 5-year charts for Manpower, Cost, Attrition.
-# - Theme selector working.
+# - Plotly chart theme selector working.
 # - All 8 charts display, 2 per row.
 # - Layout and data correct.
