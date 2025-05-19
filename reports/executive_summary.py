@@ -5,55 +5,63 @@ from datetime import datetime
 
 def render_kpi_card(label, value):
     return f"""
-    <div class="kpi-card">
-        <div class="kpi-accent"></div>
-        <span class="kpi-label">{label}</span>
-        <span class="kpi-value">{value}</span>
+    <div style='background:#fff;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);padding:18px 0 10px 20px;min-height:65px;margin-bottom:14px;'>
+        <div style='font-weight:700;font-size:17px;color:#444;'>{label}</div>
+        <div style='font-size:26px;font-weight:600;color:#23239b;margin-top:6px;'>{value}</div>
     </div>
     """
 
-# Data preparation functions (simplified for demo, customize as needed)
 def prepare_manpower_growth_data(df):
+    if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
-    df['FY'] = df['date_of_joining'].dt.year.apply(lambda y: f"FY-{str(y)[-2:]}")
+    df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     grouped = df.groupby('FY').size().reset_index(name='Headcount')
     return grouped.sort_values('FY')
 
 def prepare_manpower_cost_data(df):
+    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])
     df = df.copy()
-    df['FY'] = df['date_of_joining'].dt.year.apply(lambda y: f"FY-{str(y)[-2:]}")
+    df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')
     return grouped.sort_values('FY')
 
 def prepare_attrition_data(df):
+    if 'date_of_exit' not in df.columns: return pd.DataFrame(columns=['FY','Attrition %'])
     df = df.copy()
-    df['FY'] = df['date_of_exit'].dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
-    attrition_df = df.groupby('FY').size().reset_index(name='Leavers')
+    df['FY'] = pd.to_datetime(df['date_of_exit'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
+    attrition_df = df[df['date_of_exit'].notna()].groupby('FY').size().reset_index(name='Leavers')
     headcount_df = df.groupby('FY').size().reset_index(name='Headcount')
-    merged = pd.merge(attrition_df, headcount_df, on='FY')
+    merged = pd.merge(attrition_df, headcount_df, on='FY', how='left')
     merged['Attrition %'] = (merged['Leavers'] / merged['Headcount']) * 100
     return merged[['FY', 'Attrition %']].sort_values('FY')
 
 def prepare_gender_data(df):
+    if 'gender' not in df.columns: return pd.DataFrame(columns=['Gender','Count'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     counts = df['gender'].value_counts().reset_index()
     counts.columns = ['Gender', 'Count']
     return counts
 
 def prepare_age_distribution(df):
+    if 'date_of_birth' not in df.columns: return pd.DataFrame(columns=['Age Group','Count'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     bins = [0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 100]
     labels = ['<20', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60+']
-    df['Age Group'] = pd.cut(df['date_of_birth'].apply(lambda dob: (pd.Timestamp.now() - dob).days // 365 if pd.notnull(dob) else 0), bins=bins, labels=labels)
+    df['Age'] = df['date_of_birth'].apply(lambda dob: (pd.Timestamp.now() - pd.to_datetime(dob, errors='coerce')).days // 365 if pd.notnull(dob) else 0)
+    df['Age Group'] = pd.cut(df['Age'], bins=bins, labels=labels)
     counts = df['Age Group'].value_counts().reset_index()
     counts.columns = ['Age Group', 'Count']
     return counts.sort_values('Age Group')
 
 def prepare_tenure_distribution(df):
+    if 'total_exp_yrs' not in df.columns: return pd.DataFrame(columns=['Tenure Group','Count'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     bins = [0, 0.5, 1, 3, 5, 10, 40]
     labels = ['0-6 Months', '6-12 Months', '1-3 Years', '3-5 Years', '5-10 Years', '10+ Years']
     df['Tenure Group'] = pd.cut(df['total_exp_yrs'], bins=bins, labels=labels)
@@ -62,8 +70,10 @@ def prepare_tenure_distribution(df):
     return counts.sort_values('Tenure Group')
 
 def prepare_experience_distribution(df):
+    if 'total_exp_yrs' not in df.columns: return pd.DataFrame(columns=['Experience Group','Count'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     bins = [0, 1, 3, 5, 10, 40]
     labels = ['<1 Year', '1-3 Years', '3-5 Years', '5-10 Years', '10+ Years']
     df['Experience Group'] = pd.cut(df['total_exp_yrs'], bins=bins, labels=labels)
@@ -75,95 +85,105 @@ def prepare_transfer_trend(df):
     if 'transfer_date' not in df.columns or 'transfer_flag' not in df.columns:
         return pd.DataFrame(columns=['FY', 'Transfer %'])
     df = df.copy()
-    df['FY'] = df['transfer_date'].dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
+    df['FY'] = pd.to_datetime(df['transfer_date'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     transfer_counts = df[df['transfer_flag'] == True].groupby('FY').size()
     total_counts = df.groupby('FY').size()
     transfer_percent = (transfer_counts / total_counts * 100).reset_index(name='Transfer %').fillna(0)
     return transfer_percent.sort_values('FY')
 
 def prepare_top_talent_data(df):
-    if 'is_top_talent' not in df.columns:
-        return pd.DataFrame({'Talent': ['Top Talent', 'Others'], 'Count': [0, len(df)]})
+    if 'is_top_talent' not in df.columns: return pd.DataFrame({'Talent': ['Top Talent', 'Others'], 'Count': [0, len(df)]})
     df = df.copy()
     counts = df['is_top_talent'].map({True: 'Top Talent', False: 'Others'}).value_counts().reset_index()
     counts.columns = ['Talent', 'Count']
     return counts
 
 def prepare_performance_distribution(df):
-    if 'performance_rating' not in df.columns:
-        return pd.DataFrame(columns=['Rating'])
+    if 'performance_rating' not in df.columns: return pd.DataFrame(columns=['performance_rating'])
     df = df.copy()
     return df[['performance_rating']].dropna()
 
 def prepare_education_distribution(df):
+    if 'qualification_type' not in df.columns: return pd.DataFrame(columns=['Qualification','Count'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     counts = df['qualification_type'].value_counts().reset_index()
     counts.columns = ['Qualification', 'Count']
     return counts
 
 def prepare_salary_distribution(df):
+    if 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['total_ctc_pa'])
     df = df.copy()
-    df = df[df['date_of_exit'].isna()]
+    if 'date_of_exit' in df.columns:
+        df = df[df['date_of_exit'].isna()]
     return df[['total_ctc_pa']].dropna()
 
-# Chart rendering functions
 def render_line_chart(df, x, y):
+    if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
     fig = px.line(df, x=x, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_bar_chart(df, x, y):
+    if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
     fig = px.bar(df, x=x, y=y)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_pie_chart(df, names, values):
+    if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_donut_chart(df, names, values):
+    if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0.5)
     st.plotly_chart(fig, use_container_width=True)
 
 def render_bell_curve(df, col):
     import plotly.figure_factory as ff
+    if df.empty or col not in df.columns: st.write("No Data"); return
     data = [df[col].dropna()]
+    if len(data[0]) == 0: st.write("No Data"); return
     fig = ff.create_distplot(data, [col], show_hist=False, show_rug=False)
     st.plotly_chart(fig, use_container_width=True)
 
 def run_report(data, config):
+    st.markdown(
+        """
+        <style>
+            .block-container {padding-top:2rem;}
+            .css-1vq4p4l {padding:0;}
+        </style>
+        """, unsafe_allow_html=True
+    )
     st.title("Executive Summary")
-
     df = data.get("employee_master", pd.DataFrame())
 
     today = pd.Timestamp.now().normalize()
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
-    # KPIs
     mask_active = (df['date_of_joining'] <= today) & ((df['date_of_exit'].isna()) | (df['date_of_exit'] > today))
     active = mask_active.sum()
-    leavers = df['date_of_exit'].between(fy_start, fy_end).sum()
+    leavers = df['date_of_exit'].between(fy_start, fy_end).sum() if 'date_of_exit' in df.columns else 0
     headcount_start = ((df['date_of_joining'] <= fy_start) & ((df['date_of_exit'].isna()) | (df['date_of_exit'] > fy_start))).sum()
     headcount_end = ((df['date_of_joining'] <= fy_end) & ((df['date_of_exit'].isna()) | (df['date_of_exit'] > fy_end))).sum()
     avg_headcount = (headcount_start + headcount_end) / 2 if (headcount_start + headcount_end) else 1
     attrition = (leavers / avg_headcount) * 100 if avg_headcount else 0
-    joiners = df['date_of_joining'].between(fy_start, fy_end).sum()
-    total_cost = df['total_ctc_pa'].sum()
-    female = mask_active & (df['gender'] == 'Female')
+    joiners = df['date_of_joining'].between(fy_start, fy_end).sum() if 'date_of_joining' in df.columns else 0
+    total_cost = df['total_ctc_pa'].sum() if 'total_ctc_pa' in df.columns else 0
+    female = mask_active & (df['gender'] == 'Female') if 'gender' in df.columns else 0
     total_active = mask_active.sum()
-    female_ratio = (female.sum() / total_active * 100) if total_active > 0 else 0
-    avg_tenure = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df else 0
+    female_ratio = (female.sum() / total_active * 100) if isinstance(female, pd.Series) and total_active > 0 else 0
+    avg_tenure = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df.columns else 0
 
     now = datetime.now()
     def calc_age(dob):
-        if pd.isnull(dob):
-            return None
-        return (now - pd.to_datetime(dob)).days // 365
+        if pd.isnull(dob): return None
+        return (now - pd.to_datetime(dob, errors='coerce')).days // 365
+    avg_age = df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in df.columns else 0
+    avg_total_exp = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df.columns else 0
 
-    avg_age = df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in df else 0
-    avg_total_exp = df['total_exp_yrs'].mean() if 'total_exp_yrs' in df else 0
-
-    # Format KPI values
     total_cost_display = f"₹{total_cost / 1e7:,.0f} Cr"
     attrition_display = f"{attrition:.1f}%"
     female_ratio_display = f"{female_ratio:.1f}%"
@@ -182,18 +202,15 @@ def run_report(data, config):
         {"label": "Avg Total Exp", "value": avg_total_exp_display},
     ]
 
-    # Show KPIs (4 per row)
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
             idx = i + j
-            if idx >= len(kpis):
-                break
+            if idx >= len(kpis): break
             kpi = kpis[idx]
             with cols[j]:
                 st.markdown(render_kpi_card(kpi['label'], kpi['value']), unsafe_allow_html=True)
 
-    # Charts Data and Renderers list
     charts = [
         ("Manpower Growth", prepare_manpower_growth_data, render_line_chart, {"x": "FY", "y": "Headcount"}),
         ("Manpower Cost Trend", prepare_manpower_cost_data, render_bar_chart, {"x": "FY", "y": "Total Cost"}),
@@ -209,17 +226,26 @@ def run_report(data, config):
         ("Salary Distribution", prepare_salary_distribution, render_bell_curve, "total_ctc_pa"),
     ]
 
-    # Render charts side-by-side in pairs
     for i in range(0, len(charts), 2):
-        cols = st.columns(2)
+        cols = st.columns(2, gap="large")
         for j in range(2):
             idx = i + j
-            if idx >= len(charts):
-                break
+            if idx >= len(charts): break
             title, prepare_func, render_func, params = charts[idx]
-            st.write(f"### {title}")
-            df_chart = prepare_func(df)
-            if isinstance(params, dict):
-                render_func(df_chart, **params)
-            else:
-                render_func(df_chart, params)
+            with cols[j]:
+                st.markdown(f"##### {title}")
+                df_chart = prepare_func(df)
+                if isinstance(params, dict):
+                    render_func(df_chart, **params)
+                else:
+                    render_func(df_chart, params)
+
+# Run command:
+# streamlit run app.py
+
+# UAT Checklist:
+# - KPIs visible, correct, formatted
+# - 12 charts shown, 2 per row, no missing chart
+# - No error on missing/extra columns
+# - No chart overlaps, no empty space, charts aligned side by side
+# - Run with your data to confirm full simulation
