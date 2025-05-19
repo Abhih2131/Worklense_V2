@@ -12,29 +12,41 @@ def run_report(data, config):
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
 
-    # --- SIDEBAR MULTISELECT FILTERS WITH "ALL" DEFAULT ---
-    st.sidebar.markdown("### Filters")
+    # --- BEAUTIFUL SIDE-BY-SIDE MULTISELECT FILTERS (WITH 'ALL' DEFAULT) ---
     filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
+    n_cols = 4
     filter_selections = {}
 
-    for col in filter_columns:
-        options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-        all_label = "All"
-        sidebar_options = [all_label] + options
-        default_selection = [all_label]  # By default, "All" is selected
-
-        selected = st.sidebar.multiselect(
-            col.replace("_", " ").title(),
-            options=sidebar_options,
-            default=default_selection,
-            key=f"sidebar_{col}"
+    with st.container():
+        st.markdown(
+            "<div style='background:#f7fafd; border-radius:16px; box-shadow:0 2px 10px #ececec; padding:18px; margin-bottom:24px;'>"
+            "<b>Filters</b>",
+            unsafe_allow_html=True
         )
-        filter_selections[col] = selected
+        for row_start in range(0, len(filter_columns), n_cols):
+            cols = st.columns(n_cols)
+            for i in range(n_cols):
+                col_idx = row_start + i
+                if col_idx >= len(filter_columns):
+                    continue
+                col = filter_columns[col_idx]
+                options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+                all_label = "All"
+                options_with_all = [all_label] + options
+                # Default selection: All
+                selected = st.multiselect(
+                    col.replace("_", " ").title(),
+                    options=options_with_all,
+                    default=[all_label],
+                    key=f"multi_{col}"
+                )
+                filter_selections[col] = selected
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- Filter logic: If "All" is selected or nothing is selected, don't filter. Otherwise, filter by user selection. ---
+    # Apply all filters: If "All" in selection or selection empty, don't filter; else filter
     for col, selected in filter_selections.items():
         options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-        if ("All" not in selected) and selected:
+        if selected and "All" not in selected:
             filtered_df = filtered_df[filtered_df[col].isin(selected)]
 
     # --- Ensure datetime columns after filtering ---
