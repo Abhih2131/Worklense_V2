@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from chart_config import CHART_CONFIG
 
 def render_kpi_card(label, value):
     return f"""
@@ -81,41 +80,109 @@ def run_report(data, config):
 
     st.subheader("Charts")
 
-    metric_list = list(CHART_CONFIG.keys())
+    # Chart rendering calls (fixed types as per final list)
 
-    def get_renderer(metric, chart_type):
-        config = CHART_CONFIG[metric]
-        idx = config["chart_types"].index(chart_type)
-        func_name = config["renderers"][idx]
-        return globals()[func_name]
+    # 1. Manpower Growth (line chart)
+    manpower_growth_data = prepare_manpower_growth_data(filtered_df)
+    render_line_chart(manpower_growth_data, x="FY", y="Headcount", title="Manpower Growth")
 
-    # Show charts two per row with inline chart-type selectors
-    for i in range(0, len(metric_list), 2):
-        cols = st.columns(2)
-        for j in range(2):
-            idx = i + j
-            if idx >= len(metric_list):
-                break
-            metric = metric_list[idx]
+    # 2. Manpower Cost Trend (bar chart)
+    manpower_cost_data = prepare_manpower_cost_data(filtered_df)
+    render_bar_chart(manpower_cost_data, x="FY", y="Total Cost", title="Manpower Cost Trend")
 
-            col_title, col_selector = st.columns([7, 3])
-            with col_title:
-                st.subheader(f"{CHART_CONFIG[metric]['description']}")
-            with col_selector:
-                chart_type = st.selectbox(
-                    "",
-                    CHART_CONFIG[metric]["chart_types"],
-                    index=0,
-                    key=f"chart_type_{metric}"
-                )
+    # 3. Attrition Trend (line chart)
+    attrition_data = prepare_attrition_data(filtered_df)
+    render_line_chart(attrition_data, x="FY", y="Attrition %", title="Attrition Trend")
 
-            renderer = get_renderer(metric, chart_type)
-            metric_data = prepare_metric_data(filtered_df, metric)
-            with cols[j]:
-                renderer(metric_data)
+    # 4. Gender Diversity (donut chart)
+    gender_data = prepare_gender_data(filtered_df)
+    render_donut_chart(gender_data, names="Gender", values="Count", title="Gender Diversity")
 
-    st.button("Export KPIs and Charts to Excel (Coming Soon)")
+    # 5. Age Distribution (pie chart)
+    age_data = prepare_age_distribution(filtered_df)
+    render_pie_chart(age_data, names="Age Group", values="Count", title="Age Distribution")
 
-def prepare_metric_data(df, metric):
-    # Implement data prep for each metric here
+    # 6. Tenure Distribution (pie chart)
+    tenure_data = prepare_tenure_distribution(filtered_df)
+    render_pie_chart(tenure_data, names="Tenure Group", values="Count", title="Tenure Distribution")
+
+    # 7. Total Experience Distribution (bar chart)
+    exp_data = prepare_experience_distribution(filtered_df)
+    render_bar_chart(exp_data, x="Experience Group", y="Count", title="Total Experience Distribution")
+
+    # 8. Transfer % Trend (line chart)
+    transfer_data = prepare_transfer_trend(filtered_df)
+    render_line_chart(transfer_data, x="FY", y="Transfer %", title="Transfer % Trend")
+
+    # 9. Top Talent Ratio (pie chart)
+    talent_data = prepare_top_talent_data(filtered_df)
+    render_pie_chart(talent_data, names="Talent", values="Count", title="Top Talent Ratio")
+
+    # 10. Performance Distribution (bell curve)
+    perf_data = prepare_performance_distribution(filtered_df)
+    render_bell_curve(perf_data, x="Rating", title="Performance Distribution")
+
+    # 11. Education Type Distribution (donut chart)
+    edu_data = prepare_education_distribution(filtered_df)
+    render_donut_chart(edu_data, names="Qualification", values="Count", title="Education Type Distribution")
+
+    # 12. Salary Distribution (box plot)
+    salary_data = prepare_salary_distribution(filtered_df)
+    render_box_plot(salary_data, y="CTC", title="Salary Distribution (CTC)")
+
+def prepare_manpower_growth_data(df):
+    # Your implementation here
     pass
+
+def prepare_manpower_cost_data(df):
+    pass
+
+def prepare_attrition_data(df):
+    pass
+
+def prepare_gender_data(df):
+    pass
+
+def prepare_age_distribution(df):
+    pass
+
+def prepare_tenure_distribution(df):
+    pass
+
+def prepare_experience_distribution(df):
+    pass
+
+def prepare_transfer_trend(df):
+    pass
+
+def prepare_top_talent_data(df):
+    pass
+
+def prepare_performance_distribution(df):
+    pass
+
+def prepare_education_distribution(df):
+    pass
+
+def prepare_salary_distribution(df):
+    pass
+
+# Dummy renderer function placeholders
+
+def render_line_chart(data, x, y, title):
+    st.write(f"Line Chart: {title}")
+
+def render_bar_chart(data, x, y, title):
+    st.write(f"Bar Chart: {title}")
+
+def render_pie_chart(data, names, values, title):
+    st.write(f"Pie Chart: {title}")
+
+def render_donut_chart(data, names, values, title):
+    st.write(f"Donut Chart: {title}")
+
+def render_box_plot(data, y, title):
+    st.write(f"Box Plot: {title}")
+
+def render_bell_curve(data, x, title):
+    st.write(f"Bell Curve: {title}")
