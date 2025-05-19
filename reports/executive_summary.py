@@ -3,7 +3,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from kpi_design import KPI_STYLE, format_kpi
+from kpi_design import render_kpi_card
 
 def run_report(data, config):
     st.title("Executive Summary")
@@ -14,13 +14,12 @@ def run_report(data, config):
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
-    # Active Employees
+    # Calculations (NO design here)
     mask_active = (filtered_df['date_of_joining'] <= today) & (
         (filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today)
     )
     active = mask_active.sum()
 
-    # Attrition Rate
     leavers = filtered_df['date_of_exit'].between(fy_start, fy_end).sum()
     headcount_start = ((filtered_df['date_of_joining'] <= fy_start) &
         ((filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > fy_start))).sum()
@@ -29,29 +28,19 @@ def run_report(data, config):
     avg_headcount = (headcount_start + headcount_end) / 2 if (headcount_start + headcount_end) else 1
     attrition = (leavers / avg_headcount) * 100 if avg_headcount else 0
 
-    # Joiners
     joiners = filtered_df['date_of_joining'].between(fy_start, fy_end).sum()
-
-    # Total Cost
     total_cost = filtered_df['total_ctc_pa'].sum()
-
-    # Female Ratio
     female = mask_active & (filtered_df['gender'] == 'Female')
     total_active = mask_active.sum()
     female_ratio = (female.sum() / total_active * 100) if total_active > 0 else 0
-
-    # Avg Tenure
     avg_tenure = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
 
-    # Avg Age
     now = datetime.now()
     def calc_age(dob):
         if pd.isnull(dob):
             return None
         return (now - pd.to_datetime(dob)).days // 365
     avg_age = filtered_df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in filtered_df else 0
-
-    # Avg Total Exp
     avg_total_exp = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
 
     kpis = [
@@ -65,6 +54,7 @@ def run_report(data, config):
         {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
 
+    # 4 cards per row
     for i in range(0, len(kpis), 4):
         cols = st.columns(4)
         for j in range(4):
@@ -74,38 +64,7 @@ def run_report(data, config):
             kpi = kpis[idx]
             with cols[j]:
                 st.markdown(
-                    f"""
-                    <div style="
-                        background:{KPI_STYLE['background_gradient']};
-                        box-shadow:{KPI_STYLE['box_shadow']};
-                        border-radius:{KPI_STYLE['border_radius']};
-                        padding:{KPI_STYLE['padding']};
-                        width:{KPI_STYLE['box_width']}px;
-                        height:{KPI_STYLE['box_height']}px;
-                        display:flex;
-                        flex-direction:column;
-                        justify-content:{KPI_STYLE['justify_content']};
-                        align-items:{KPI_STYLE['align_items']};
-                        margin-bottom:{KPI_STYLE['margin_bottom']};
-                        transition:{KPI_STYLE['transition']};">
-                        <div style="
-                            height:{KPI_STYLE['accent_height']};
-                            width:{KPI_STYLE['accent_width']};
-                            background:{KPI_STYLE['accent_color']};
-                            border-radius:8px;
-                            margin-bottom:{KPI_STYLE['accent_margin_bottom']};"></div>
-                        <span style="font-size:{KPI_STYLE['font_size_label']};
-                                     font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};
-                                     color:{KPI_STYLE['label_color']};">
-                            {kpi['label']}
-                        </span>
-                        <span style="font-size:{KPI_STYLE['font_size_value']};
-                                     color:{KPI_STYLE['value_color']};
-                                     margin-top:7px;">
-                            {format_kpi(kpi['value'], kpi['type'])}
-                        </span>
-                    </div>
-                    """,
+                    render_kpi_card(kpi['label'], kpi['value'], kpi['type']),
                     unsafe_allow_html=True
                 )
 
