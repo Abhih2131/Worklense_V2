@@ -8,20 +8,19 @@ from kpi_design import KPI_STYLE, format_kpi
 def run_report(data, config):
     st.title("Executive Summary")
 
-    # Use globally filtered employee data from app.py
     filtered_df = data.get("employee_master", pd.DataFrame())
 
     today = pd.Timestamp.now().normalize()
     fy_start = pd.Timestamp('2025-04-01')
     fy_end = pd.Timestamp('2026-03-31')
 
-    # Active Employees (as of today)
+    # Active Employees
     mask_active = (filtered_df['date_of_joining'] <= today) & (
         (filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > today)
     )
     active = mask_active.sum()
 
-    # Attrition Rate FY 2025-26
+    # Attrition Rate
     leavers = filtered_df['date_of_exit'].between(fy_start, fy_end).sum()
     headcount_start = ((filtered_df['date_of_joining'] <= fy_start) &
         ((filtered_df['date_of_exit'].isna()) | (filtered_df['date_of_exit'] > fy_start))).sum()
@@ -30,21 +29,21 @@ def run_report(data, config):
     avg_headcount = (headcount_start + headcount_end) / 2 if (headcount_start + headcount_end) else 1
     attrition = (leavers / avg_headcount) * 100 if avg_headcount else 0
 
-    # Joiners (FY 2025-26)
+    # Joiners
     joiners = filtered_df['date_of_joining'].between(fy_start, fy_end).sum()
 
-    # Total Cost (INR) - shown in Cr
+    # Total Cost
     total_cost = filtered_df['total_ctc_pa'].sum()
 
-    # Female Ratio (active as of today)
+    # Female Ratio
     female = mask_active & (filtered_df['gender'] == 'Female')
     total_active = mask_active.sum()
     female_ratio = (female.sum() / total_active * 100) if total_active > 0 else 0
 
-    # Avg Tenure (years)
+    # Avg Tenure
     avg_tenure = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
 
-    # Avg Age (years)
+    # Avg Age
     now = datetime.now()
     def calc_age(dob):
         if pd.isnull(dob):
@@ -52,10 +51,9 @@ def run_report(data, config):
         return (now - pd.to_datetime(dob)).days // 365
     avg_age = filtered_df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in filtered_df else 0
 
-    # Avg Total Exp (years)
+    # Avg Total Exp
     avg_total_exp = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
 
-    # --- KPI Display Data ---
     kpis = [
         {"label": "Active Employees", "value": active, "type": "Integer"},
         {"label": "Attrition Rate (FY 25-26)", "value": attrition, "type": "Percentage"},
@@ -86,16 +84,16 @@ def run_report(data, config):
                         height:{KPI_STYLE['box_height']}px;
                         display:flex;
                         flex-direction:column;
-                        justify-content:space-between;
-                        align-items:center;
-                        margin-bottom:14px;
-                        transition:box-shadow 0.2s;">
+                        justify-content:{KPI_STYLE['justify_content']};
+                        align-items:{KPI_STYLE['align_items']};
+                        margin-bottom:{KPI_STYLE['margin_bottom']};
+                        transition:{KPI_STYLE['transition']};">
                         <div style="
                             height:{KPI_STYLE['accent_height']};
-                            width:60px;
+                            width:{KPI_STYLE['accent_width']};
                             background:{KPI_STYLE['accent_color']};
                             border-radius:8px;
-                            margin-bottom:18px;"></div>
+                            margin-bottom:{KPI_STYLE['accent_margin_bottom']};"></div>
                         <span style="font-size:{KPI_STYLE['font_size_label']};
                                      font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};
                                      color:{KPI_STYLE['label_color']};">
