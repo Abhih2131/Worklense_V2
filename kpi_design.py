@@ -1,3 +1,4 @@
+
 KPI_STYLE = {
     "background": "#f4f6fa",
     "border_radius": "18px",
@@ -5,8 +6,8 @@ KPI_STYLE = {
     "padding": "22px 0 10px 0",
     "width": "100%",
     "height": "96px",
-    "value_font_size": "2.2rem",
-    "value_color": "#23235B",
+    "value_font_size": "2.0rem",
+    "value_color": "#4359B8",
     "label_font_size": "1.08rem",
     "label_color": "#080808",
     "label_bold": True,
