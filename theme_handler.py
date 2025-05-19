@@ -10,15 +10,13 @@ def selected_theme():
     )
 
     plotly_themes = {
-        "Default": "plotly",
         "White Classic": "plotly_white",
         "GGPlot Style": "ggplot2",
         "Seaborn Style": "seaborn",
         "Simple White": "simple_white",
         "Presentation": "presentation",
         "Grid On": "gridon",
-        "No Theme (None)": "none"
-    }
+            }
     plotly_theme_label = st.sidebar.selectbox(
         "Chart Style (Plotly Theme)",
         options=list(plotly_themes.keys()),
