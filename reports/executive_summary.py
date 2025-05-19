@@ -12,17 +12,37 @@ def run_report(data, config):
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
 
-    # --- FILTERS IN SIDEBAR ---
-    st.sidebar.markdown("### Filters")
+    # --- BEAUTIFUL SIDE-BY-SIDE MULTISELECT FILTERS ---
     filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
+    n_cols = 4  # filters per row
     filter_selections = {}
-    for col in filter_columns:
-        unique_vals = ["All"] + sorted([str(x) for x in emp_df[col].dropna().unique()])
-        selected = st.sidebar.selectbox(col.replace("_", " ").title(), unique_vals, key=f"f_{col}")
-        filter_selections[col] = selected
+
+    with st.container():
+        st.markdown(
+            "<div style='background:#f7fafd; border-radius:16px; box-shadow:0 2px 10px #ececec; padding:18px; margin-bottom:24px;'>"
+            "<b>Filters</b>",
+            unsafe_allow_html=True
+        )
+        for row_start in range(0, len(filter_columns), n_cols):
+            cols = st.columns(n_cols)
+            for i, col in enumerate(filter_columns[row_start:row_start+n_cols]):
+                with cols[i]:
+                    options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+                    selected = st.multiselect(
+                        col.replace("_", " ").title(),
+                        options=options,
+                        default=options,  # Default: all selected
+                        key=f"f_{col}"
+                    )
+                    filter_selections[col] = selected
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # Apply all filters (AND logic)
     for col, selected in filter_selections.items():
-        if selected != "All":
-            filtered_df = filtered_df[filtered_df[col] == selected]
+        # If user deselects any option, apply filter
+        all_options = sorted([str(x) for x in emp_df[col].dropna().unique()])
+        if selected and len(selected) != len(all_options):
+            filtered_df = filtered_df[filtered_df[col].isin(selected)]
 
     # --- Ensure datetime columns after filtering ---
     filtered_df = ensure_datetime(filtered_df, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
@@ -95,25 +115,4 @@ def run_report(data, config):
                         background:{KPI_STYLE['background_color']};
                         box-shadow:{KPI_STYLE['box_shadow']};
                         border-radius:{KPI_STYLE['border_radius']};
-                        padding:{KPI_STYLE['padding']};
-                        width:{KPI_STYLE['box_width']}px;
-                        height:{KPI_STYLE['box_height']}px;
-                        text-align:center;
-                        display:flex;
-                        flex-direction:column;
-                        justify-content:center;
-                        align-items:center;">
-                        <span style="font-size:{KPI_STYLE['font_size_label']};font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};">
-                            {kpi['label']}
-                        </span>
-                        <span style="font-size:{KPI_STYLE['font_size_value']};color:{KPI_STYLE['value_color']};margin-top:10px;">
-                            {format_kpi(kpi['value'], kpi['type'])}
-                        </span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-    st.subheader("Charts")
-    st.info("Charts will appear here in future releases.")
-    st.button("Export KPIs to Excel (Coming Soon)")
+                        padding:{KPI_STYLE['padding']
