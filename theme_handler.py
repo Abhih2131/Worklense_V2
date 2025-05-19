@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.io as pio
 
 def selected_theme():
     st.set_page_config(
@@ -8,25 +9,28 @@ def selected_theme():
         initial_sidebar_state="expanded",
     )
 
-    # Define available Plotly themes
-    plotly_themes = {
+    # All available Plotly templates
+    all_plotly_templates = list(pio.templates)
+    # Pick 4 core themes to show as the main options
+    main_themes = {
+        "Default": "plotly",
         "White Classic": "plotly_white",
-        "GGPlot Style": "ggplot2",
-        "Seaborn Style": "seaborn",
-        "Simple White": "simple_white",
-        "Presentation": "presentation",
-        "Grid On": "gridon",
+        "Seaborn": "seaborn",
+        "Presentation": "presentation"
     }
 
-    # Chart style selector (single instance, in the sidebar)
     plotly_theme_label = st.sidebar.selectbox(
         "Chart Style (Plotly Theme)",
-        options=list(plotly_themes.keys()),
+        options=list(main_themes.keys()),
         index=0
     )
-    st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
+    st.session_state["plotly_template"] = main_themes[plotly_theme_label]
 
-    # Global app and sidebar style
+    # (Optional) Show all templates if needed for admin/debugging:
+    # st.sidebar.markdown("**All Plotly Templates:**")
+    # st.sidebar.write(all_plotly_templates)
+
+    # Inject global styles
     st.markdown(
         """
         <style>
