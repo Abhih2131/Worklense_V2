@@ -81,28 +81,6 @@ def prepare_experience_distribution(df):
     counts.columns = ['Experience Group', 'Count']
     return counts.sort_values('Experience Group')
 
-def prepare_transfer_trend(df):
-    if 'transfer_date' not in df.columns or 'transfer_flag' not in df.columns:
-        return pd.DataFrame(columns=['FY', 'Transfer %'])
-    df = df.copy()
-    df['FY'] = pd.to_datetime(df['transfer_date'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
-    transfer_counts = df[df['transfer_flag'] == True].groupby('FY').size()
-    total_counts = df.groupby('FY').size()
-    transfer_percent = (transfer_counts / total_counts * 100).reset_index(name='Transfer %').fillna(0)
-    return transfer_percent.sort_values('FY')
-
-def prepare_top_talent_data(df):
-    if 'is_top_talent' not in df.columns: return pd.DataFrame({'Talent': ['Top Talent', 'Others'], 'Count': [0, len(df)]})
-    df = df.copy()
-    counts = df['is_top_talent'].map({True: 'Top Talent', False: 'Others'}).value_counts().reset_index()
-    counts.columns = ['Talent', 'Count']
-    return counts
-
-def prepare_performance_distribution(df):
-    if 'performance_rating' not in df.columns: return pd.DataFrame(columns=['performance_rating'])
-    df = df.copy()
-    return df[['performance_rating']].dropna()
-
 def prepare_education_distribution(df):
     if 'qualification_type' not in df.columns: return pd.DataFrame(columns=['Qualification','Count'])
     df = df.copy()
@@ -111,13 +89,6 @@ def prepare_education_distribution(df):
     counts = df['qualification_type'].value_counts().reset_index()
     counts.columns = ['Qualification', 'Count']
     return counts
-
-def prepare_salary_distribution(df):
-    if 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['total_ctc_pa'])
-    df = df.copy()
-    if 'date_of_exit' in df.columns:
-        df = df[df['date_of_exit'].isna()]
-    return df[['total_ctc_pa']].dropna()
 
 def render_line_chart(df, x, y):
     if df.empty or x not in df.columns or y not in df.columns: st.write("No Data"); return
@@ -137,14 +108,6 @@ def render_pie_chart(df, names, values):
 def render_donut_chart(df, names, values):
     if df.empty or names not in df.columns or values not in df.columns: st.write("No Data"); return
     fig = px.pie(df, names=names, values=values, hole=0.5)
-    st.plotly_chart(fig, use_container_width=True)
-
-def render_bell_curve(df, col):
-    import plotly.figure_factory as ff
-    if df.empty or col not in df.columns: st.write("No Data"); return
-    data = [df[col].dropna()]
-    if len(data[0]) == 0: st.write("No Data"); return
-    fig = ff.create_distplot(data, [col], show_hist=False, show_rug=False)
     st.plotly_chart(fig, use_container_width=True)
 
 def run_report(data, config):
@@ -219,11 +182,7 @@ def run_report(data, config):
         ("Age Distribution", prepare_age_distribution, render_pie_chart, {"names": "Age Group", "values": "Count"}),
         ("Tenure Distribution", prepare_tenure_distribution, render_pie_chart, {"names": "Tenure Group", "values": "Count"}),
         ("Total Experience Distribution", prepare_experience_distribution, render_bar_chart, {"x": "Experience Group", "y": "Count"}),
-        ("Transfer % Trend", prepare_transfer_trend, render_line_chart, {"x": "FY", "y": "Transfer %"}),
-        ("Top Talent Ratio", prepare_top_talent_data, render_pie_chart, {"names": "Talent", "values": "Count"}),
-        ("Performance Distribution", prepare_performance_distribution, render_bell_curve, "performance_rating"),
         ("Education Type Distribution", prepare_education_distribution, render_donut_chart, {"names": "Qualification", "values": "Count"}),
-        ("Salary Distribution", prepare_salary_distribution, render_bell_curve, "total_ctc_pa"),
     ]
 
     for i in range(0, len(charts), 2):
@@ -245,7 +204,7 @@ def run_report(data, config):
 
 # UAT Checklist:
 # - KPIs visible, correct, formatted
-# - 12 charts shown, 2 per row, no missing chart
+# - 8 charts shown, 2 per row, no missing chart
 # - No error on missing/extra columns
 # - No chart overlaps, no empty space, charts aligned side by side
 # - Run with your data to confirm full simulation
