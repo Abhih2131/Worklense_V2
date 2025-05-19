@@ -1,5 +1,3 @@
-# reports/executive_summary.py
-
 import streamlit as st
 import pandas as pd
 
@@ -48,4 +46,6 @@ def run_report(data, config):
             st.write(f"**{row['Chart_Title']}**")
             st.write("Chart will go here.")  # Placeholder for charts
     else:
-        st.info("
+        st.info("No Chart config found for Executive Summary.")
+
+    st.button("Export KPIs to Excel (Coming Soon)")
