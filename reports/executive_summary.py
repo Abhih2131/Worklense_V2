@@ -7,13 +7,21 @@ FILTER_COLS = [
     "zone", "area", "band", "employment_type"
 ]
 
+# Utility functions for KPI calculations
+def mean_age(series):
+    now = datetime.now()
+    ages = []
+    for dob in pd.to_datetime(series.dropna(), errors='coerce'):
+        ages.append((now - dob).days // 365)
+    return sum(ages) / len(ages) if ages else 0
+
 def run_report(data, config):
     st.title("Executive Summary")
 
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
 
-    # --- FILTER UI (Hidden by default, show on button click) ---
+    # --- FILTER UI (hidden by default, show on button) ---
     show_filters = st.button("Show Filters")
     filter_values = {}
 
@@ -27,52 +35,76 @@ def run_report(data, config):
                 if selected != "All":
                     filtered_df = filtered_df[filtered_df[col] == selected]
 
-    # --- KPI Calculations ---
-    headcount = len(filtered_df)
-    active_employees = (filtered_df['employment_status'] == 'Active').sum()
-    total_cost = filtered_df['total_ctc_pa'].sum()
-    # Avoid division by zero
-    attrition_rate = (
-        (filtered_df['employment_status'] == 'Inactive').sum() / headcount * 100
-        if headcount > 0 else 0
-    )
-    female_ratio = (
-        (filtered_df['gender'] == 'Female').sum() / headcount * 100
-        if headcount > 0 else 0
-    )
-    # Joiners in current year
-    this_year = datetime.now().year
-    joiners = filtered_df['date_of_joining'].apply(
-        lambda x: pd.to_datetime(x).year if pd.notnull(x) else None
-    ).eq(this_year).sum() if 'date_of_joining' in filtered_df else 0
-    # Average Tenure (in years)
-    avg_tenure = filtered_df['total_exp_yrs'].mean() if 'total_exp_yrs' in filtered_df else 0
-    # Average Age (approx, from date_of_birth)
-    def calc_age(dob):
-        if pd.isnull(dob): return None
-        return (datetime.now() - pd.to_datetime(dob)).days // 365
-    avg_age = filtered_df['date_of_birth'].apply(calc_age).mean() if 'date_of_birth' in filtered_df else 0
+    # --- Config-driven KPIs ---
+    kpi_config = config.get("ExecutiveSummary_KPIs", pd.DataFrame())
+    if not kpi_config.empty:
+        # Sort by 'Order' if present
+        if "Order" in kpi_config.columns:
+            kpi_config = kpi_config.sort_values("Order")
+        # Prepare values
+        kpi_values = []
+        for _, row in kpi_config.iterrows():
+            formula = row["KPI_Formula/Field"]
+            value = "--"
+            try:
+                if formula == "employment_status=='Active'":
+                    value = (filtered_df['employment_status'] == 'Active').sum()
+                elif formula == "employment_status=='Inactive'/count*100":
+                    total = len(filtered_df)
+                    inactive = (filtered_df['employment_status'] == 'Inactive').sum()
+                    value = (inactive / total * 100) if total > 0 else 0
+                elif formula == "sum(total_ctc_pa)":
+                    value = filtered_df['total_ctc_pa'].sum()
+                elif formula == "gender=='Female'/count*100":
+                    total = len(filtered_df)
+                    female = (filtered_df['gender'] == 'Female').sum()
+                    value = (female / total * 100) if total > 0 else 0
+                elif formula == "date_of_joining.year==current_year":
+                    if "date_of_joining" in filtered_df:
+                        this_year = datetime.now().year
+                        value = filtered_df['date_of_joining'].apply(
+                            lambda x: pd.to_datetime(x).year if pd.notnull(x) else None
+                        ).eq(this_year).sum()
+                    else:
+                        value = 0
+                elif formula == "mean(total_exp_yrs)":
+                    value = filtered_df['total_exp_yrs'].mean() if "total_exp_yrs" in filtered_df else 0
+                elif formula == "mean_age(date_of_birth)":
+                    value = mean_age(filtered_df['date_of_birth']) if "date_of_birth" in filtered_df else 0
+                else:
+                    value = "--"
+            except Exception as e:
+                value = "--"
+            kpi_values.append(value)
 
-    # --- Display KPIs (4 per row) ---
-    kpi_labels = [
-        "Headcount", "Active", "Attrition (%)", "Total Cost (INR)",
-        "Female (%)", "Joiners", "Avg Tenure (yrs)", "Avg Age"
-    ]
-    kpi_values = [
-        f"{headcount:,}",
-        f"{active_employees:,}",
-        f"{attrition_rate:.1f}%",
-        f"₹{total_cost:,.0f}",
-        f"{female_ratio:.1f}%",
-        f"{joiners:,}",
-        f"{avg_tenure:.1f}",
-        f"{avg_age:.1f}"
-    ]
-    for i in range(0, 8, 4):
-        cols = st.columns(4)
-        for j in range(4):
-            with cols[j]:
-                st.metric(label=kpi_labels[i+j], value=kpi_values[i+j])
+        # Display 4 per row
+        display_labels = kpi_config["Display_Label"].tolist()
+        display_units = kpi_config["Unit"].tolist()
+        kpi_types = kpi_config["KPI_Type"].tolist()
+        show_flags = kpi_config["Show_By_Default"].tolist()
+
+        shown = 0
+        for i in range(0, len(display_labels), 4):
+            cols = st.columns(4)
+            for j in range(4):
+                idx = i + j
+                if idx >= len(display_labels):
+                    break
+                if str(show_flags[idx]).upper() == "TRUE":
+                    val = kpi_values[idx]
+                    # Format as per type
+                    if kpi_types[idx] == "Currency" and val != "--":
+                        val = f"₹{val:,.0f}"
+                    elif kpi_types[idx] == "Percentage" and val != "--":
+                        val = f"{val:.1f}%"
+                    elif kpi_types[idx] in ["Years", "Float"] and val != "--":
+                        val = f"{val:.1f}"
+                    elif kpi_types[idx] == "Integer" and val != "--":
+                        val = f"{int(val):,}"
+                    st.metric(label=display_labels[idx], value=val, help=f"Unit: {display_units[idx]}")
+                    shown += 1
+    else:
+        st.info("No KPI config found for Executive Summary.")
 
     # --- Charts Placeholder ---
     st.subheader("Charts")
@@ -85,8 +117,3 @@ def run_report(data, config):
         st.info("No Chart config found for Executive Summary.")
 
     st.button("Export KPIs to Excel (Coming Soon)")
-
-# UAT Checklist:
-# - 8 KPIs in 2 rows (4 per row)
-# - Filters hidden by default; shown only on button click
-# - All calculations update with filtered data
