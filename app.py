@@ -4,8 +4,6 @@ import streamlit as st
 import importlib.util
 import os
 
-from auth import login_form, is_logged_in, logout
-
 st.set_page_config(layout="wide")
 
 # ✅ Inject custom CSS from /config/style.css
@@ -16,16 +14,6 @@ try:
 except FileNotFoundError:
     st.warning("Custom CSS file not found.")
 
-# ✅ Logout if triggered
-if st.query_params.get("logout") == ['true']:
-    logout()
-    st.rerun()
-
-# ✅ Show login form if not authenticated
-if not is_logged_in():
-    login_form()
-    st.stop()
-
 # ✅ Header with Help and Logout
 st.markdown("""
 <div class='custom-header'>
@@ -35,7 +23,6 @@ st.markdown("""
   </div>
   <div class='header-right'>
     <a href="https://yourhelp.site" target="_blank">Help</a>
-    <a href="?logout=true" class="header-logout">Logout</a>
   </div>
 </div>
 """, unsafe_allow_html=True)
