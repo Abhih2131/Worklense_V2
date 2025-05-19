@@ -9,47 +9,9 @@ from utils.data_handler import ensure_datetime
 def run_report(data, config):
     st.title("Executive Summary")
 
+    # --- Load centrally filtered data ---
     emp_df = data.get("employee_master", pd.DataFrame())
     filtered_df = emp_df.copy()
-
-    # --- BEAUTIFUL SIDE-BY-SIDE MULTISELECT FILTERS (WITH 'ALL' DEFAULT) ---
-    filter_columns = ["company", "business_unit", "department", "function", "zone", "area", "band", "employment_type"]
-    n_cols = 4
-    filter_selections = {}
-
-    with st.container():
-        st.markdown(
-            "<div style='background:#f7fafd; border-radius:16px; box-shadow:0 2px 10px #ececec; padding:18px; margin-bottom:24px;'>"
-            "<b>Filters</b>",
-            unsafe_allow_html=True
-        )
-        for row_start in range(0, len(filter_columns), n_cols):
-            cols = st.columns(n_cols)
-            for i in range(n_cols):
-                col_idx = row_start + i
-                if col_idx >= len(filter_columns):
-                    continue
-                col = filter_columns[col_idx]
-                options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-                all_label = "All"
-                options_with_all = [all_label] + options
-                # Default selection: All
-                selected = st.multiselect(
-                    col.replace("_", " ").title(),
-                    options=options_with_all,
-                    default=[all_label],
-                    key=f"multi_{col}"
-                )
-                filter_selections[col] = selected
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    # Apply all filters: If "All" in selection or selection empty, don't filter; else filter
-    for col, selected in filter_selections.items():
-        options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-        if selected and "All" not in selected:
-            filtered_df = filtered_df[filtered_df[col].isin(selected)]
-
-    # --- Ensure datetime columns after filtering ---
     filtered_df = ensure_datetime(filtered_df, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
 
     today = pd.Timestamp.now().normalize()
