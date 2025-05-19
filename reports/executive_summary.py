@@ -7,24 +7,6 @@ from kpi_design import render_kpi_card  # Import your new KPI card function
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1,-1,-1)]
 
-def theme_selector():
-    plotly_themes = {
-        "Default": "plotly",
-        "White Classic": "plotly_white",
-        "GGPlot Style": "ggplot2",
-        "Seaborn Style": "seaborn",
-        "Simple White": "simple_white",
-        "Presentation": "presentation",
-        "Grid On": "gridon",
-        "No Theme (None)": "none"
-    }
-    plotly_theme_label = st.sidebar.selectbox(
-        "Chart Style (Plotly Theme)",
-        options=list(plotly_themes.keys()),
-        index=0
-    )
-    st.session_state["plotly_template"] = plotly_themes[plotly_theme_label]
-
 def prepare_manpower_growth_data(df, fy_list):
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
