@@ -1,5 +1,6 @@
 from datetime import datetime
 import pandas as pd
+import plotly.express as px
 
 def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1, -1, -1)]
@@ -132,16 +133,38 @@ def run_report(data, config):
     current_fy = now.year + 1 if now.month >= 4 else now.year
     fy_list = get_last_fy_list(current_fy, n=5)
 
+    # Data for charts
+    manpower_growth = prepare_manpower_growth_data(df, fy_list)
+    manpower_cost = prepare_manpower_cost_data(df, fy_list)
+    attrition = prepare_attrition_data(df, fy_list)
+    gender = prepare_gender_data(df)
+    age = prepare_age_distribution(df)
+    tenure = prepare_tenure_distribution(df)
+    experience = prepare_experience_distribution(df)
+    education = prepare_education_distribution(df)
+
+    # CHARTS: Plotly examples for each metric
+    charts = []
+    if not manpower_growth.empty:
+        charts.append(px.line(manpower_growth, x="FY", y="Headcount", title="Manpower Growth"))
+    if not manpower_cost.empty:
+        charts.append(px.bar(manpower_cost, x="FY", y="Total Cost", title="Manpower Cost"))
+    if not attrition.empty:
+        charts.append(px.line(attrition, x="FY", y="Attrition %", title="Attrition Rate"))
+    if not gender.empty:
+        charts.append(px.pie(gender, names="Gender", values="Count", title="Gender Diversity"))
+    if not age.empty:
+        charts.append(px.bar(age, x="Age Group", y="Count", title="Age Distribution"))
+    if not tenure.empty:
+        charts.append(px.bar(tenure, x="Tenure Group", y="Count", title="Tenure Distribution"))
+    if not experience.empty:
+        charts.append(px.bar(experience, x="Experience Group", y="Count", title="Total Experience Distribution"))
+    if not education.empty:
+        charts.append(px.bar(education, x="Qualification", y="Count", title="Education Distribution"))
+
     result = {
         "kpis": calc_kpis(df, fy_list, now),
-        "manpower_growth": prepare_manpower_growth_data(df, fy_list),
-        "manpower_cost": prepare_manpower_cost_data(df, fy_list),
-        "attrition": prepare_attrition_data(df, fy_list),
-        "gender": prepare_gender_data(df),
-        "age": prepare_age_distribution(df),
-        "tenure": prepare_tenure_distribution(df),
-        "experience": prepare_experience_distribution(df),
-        "education": prepare_education_distribution(df),
+        "charts": charts,
         "fy_list": fy_list,
         "as_of": now
     }
