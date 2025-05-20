@@ -280,7 +280,7 @@ def run_report(data, config):
         {"label": f"Joiners (Financial Year {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": joiners, "type": "Integer"},
         {"label": "Total Cost (INR)", "value": total_cost, "type": "Currency"},
         {"label": "Female Ratio", "value": female_ratio, "type": "Percentage"},
-        {"label": "Avg Tenure", "value": avg_tenure, "type": "Years"},
+        {"label": "Average Tenure", "value": avg_tenure, "type": "Years"},
         {"label": "Avg Age", "value": avg_age, "type": "Years"},
         {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
