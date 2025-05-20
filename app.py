@@ -15,7 +15,7 @@ data_files = {
 data = load_all_data(data_files)
 emp_df = data['employee_master']
 
-# --- UI: Branding, Sidebar/Filters, Theme selection ---
+# --- Sidebar: Filters + Chart Theme + Branding (this must be BEFORE report is run!) ---
 filtered_emp, filter_dict = setup_sidebar(emp_df)
 data['employee_master'] = filtered_emp
 render_branding()
@@ -40,45 +40,7 @@ if selected_report:
     if hasattr(mod, "run_report"):
         report = mod.run_report(data, {})
         st.title(selected_report.replace("_", " ").title())
-        if "kpis" in report:
-            for i in range(0, len(report["kpis"]), 4):
-                cols = st.columns(4)
-                for j in range(4):
-                    idx = i + j
-                    if idx >= len(report["kpis"]): break
-                    kpi = report["kpis"][idx]
-                    with cols[j]:
-                        st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type']), unsafe_allow_html=True)
-        # --- Charts: 2 per row, basic heuristics ---
-        chart_keys = [k for k in report if k not in ("kpis", "fy_list", "as_of")]
-        for i in range(0, len(chart_keys), 2):
-            cols = st.columns(2, gap="large")
-            for j in range(2):
-                idx = i + j
-                if idx >= len(chart_keys): break
-                chart_key = chart_keys[idx]
-                chart_df = report[chart_key]
-                with cols[j]:
-                    st.markdown(f"##### {chart_key.replace('_', ' ').title()}")
-                    # Basic auto-chart logic (can customize further per report)
-                    if "cost" in chart_key:
-                        render_bar_chart(chart_df, x="FY", y="Total Cost")
-                    elif "attrition" in chart_key:
-                        render_line_chart(chart_df, x="FY", y="Attrition %")
-                    elif "growth" in chart_key:
-                        render_line_chart(chart_df, x="FY", y="Headcount")
-                    elif "gender" in chart_key:
-                        render_donut_chart(chart_df, names="Gender", values="Count")
-                    elif "age" in chart_key:
-                        render_pie_chart(chart_df, names="Age Group", values="Count")
-                    elif "tenure" in chart_key:
-                        render_pie_chart(chart_df, names="Tenure Group", values="Count")
-                    elif "experience" in chart_key:
-                        render_bar_chart(chart_df, x="Experience Group", y="Count")
-                    elif "education" in chart_key:
-                        render_donut_chart(chart_df, names="Qualification", values="Count")
-                    else:
-                        st.dataframe(chart_df)
+        # (KPI/charts rendering logic here)
     else:
         st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
 
