@@ -1,4 +1,5 @@
 import streamlit as st
+import os  # <-- Added this import
 
 def setup_sidebar(emp_df):
     # 1. Report selector at top
