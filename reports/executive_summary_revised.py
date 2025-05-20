@@ -6,6 +6,7 @@ def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1, -1, -1)]
 
 def prepare_manpower_growth_data(df, fy_list):
+    # This function is only used to generate FY list for axis labeling.
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
@@ -138,24 +139,53 @@ def run_report(data, config):
 
     charts = []
 
-    # --- Year-End Headcount Chart (Line) ---
+    # --- Year-End Headcount Chart (Line) & Year-End Cost Chart (Bar) ---
     if not manpower_growth.empty:
         fy_years = [int(fy[-2:]) + 2000 for fy in manpower_growth["FY"]]
         fy_ends = [datetime(y, 3, 31) for y in fy_years]
         year_end_headcounts = []
-        for fy_end in fy_ends:
-            count = df[
-                (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
-                (
-                    df["date_of_exit"].isna() |
-                    (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
-                )
-            ].shape[0]
-            year_end_headcounts.append(count)
+        year_end_costs = []
+        for i, fy_end in enumerate(fy_ends):
+            if i == len(fy_ends) - 1:
+                # YTD (as of today): match KPI
+                headcount = df[
+                    (pd.to_datetime(df["date_of_joining"], errors='coerce') <= now) &
+                    (
+                        df["date_of_exit"].isna() |
+                        (pd.to_datetime(df["date_of_exit"], errors='coerce') > now)
+                    )
+                ].shape[0]
+                cost = df[
+                    (pd.to_datetime(df["date_of_joining"], errors='coerce') <= now) &
+                    (
+                        df["date_of_exit"].isna() |
+                        (pd.to_datetime(df["date_of_exit"], errors='coerce') > now)
+                    )
+                ]["total_ctc_pa"].sum() if "total_ctc_pa" in df.columns else 0
+            else:
+                # Past FY: count as of March 31
+                headcount = df[
+                    (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
+                    (
+                        df["date_of_exit"].isna() |
+                        (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
+                    )
+                ].shape[0]
+                cost = df[
+                    (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
+                    (
+                        df["date_of_exit"].isna() |
+                        (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
+                    )
+                ]["total_ctc_pa"].sum() if "total_ctc_pa" in df.columns else 0
+            year_end_headcounts.append(headcount)
+            year_end_costs.append(cost / 1e7)
         manpower_growth["Year-End Headcount"] = year_end_headcounts
+        manpower_growth["Year-End Cost (INR Cr)"] = year_end_costs
         manpower_growth["FY"] = manpower_growth["FY"].astype(str)
         if len(manpower_growth) > 0:
             manpower_growth.loc[manpower_growth.index[-1], "FY"] = "YTD"
+
         fig1 = px.line(
             manpower_growth,
             x="FY",
@@ -167,26 +197,16 @@ def run_report(data, config):
         fig1.update_yaxes(range=[0, max(manpower_growth["Year-End Headcount"]) * 1.2])
         charts.append(fig1)
 
-        # --- Year-End Manpower Cost (INR Cr) Chart (Bar, FIXED) ---
-for i, fy_end in enumerate(fy_ends):
-    if i == len(fy_ends) - 1:
-        # For YTD (last index), use today's active employees
-        cost = df[
-            (pd.to_datetime(df["date_of_joining"], errors='coerce') <= now) &
-            (
-                df["date_of_exit"].isna() |
-                (pd.to_datetime(df["date_of_exit"], errors='coerce') > now)
-            )
-        ]["total_ctc_pa"].sum() if "total_ctc_pa" in df.columns else 0
-    else:
-        cost = df[
-            (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
-            (
-                df["date_of_exit"].isna() |
-                (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
-            )
-        ]["total_ctc_pa"].sum() if "total_ctc_pa" in df.columns else 0
-    year_end_costs.append(cost / 1e7)  # INR Cr
+        fig2 = px.bar(
+            manpower_growth,
+            x="FY",
+            y="Year-End Cost (INR Cr)",
+            title="Year-End Manpower Cost (INR Cr)",
+            text_auto=True
+        )
+        fig2.update_yaxes(range=[0, max(manpower_growth["Year-End Cost (INR Cr)"]) * 1.2])
+        charts.append(fig2)
+
     # --- All Other Charts Unchanged ---
     if not attrition.empty:
         charts.append(px.line(attrition, x="FY", y="Attrition %", title="Attrition Rate"))
