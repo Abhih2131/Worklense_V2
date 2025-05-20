@@ -6,7 +6,7 @@ def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1, -1, -1)]
 
 def prepare_manpower_growth_data(df, fy_list):
-    # This function can be unchanged (used for generating FY list)
+    # Used for generating FY list (not used for actual headcount/cost calculations anymore)
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
@@ -134,9 +134,11 @@ def run_report(data, config):
     current_fy = now.year + 1 if now.month >= 4 else now.year
     fy_list = get_last_fy_list(current_fy, n=5)
 
-    # Data for charts
+    # --- Calculate KPIs first ---
+    kpis = calc_kpis(df, fy_list, now)
+
+    # --- Prepare chart data ---
     manpower_growth = prepare_manpower_growth_data(df, fy_list)
-    manpower_cost = prepare_manpower_cost_data(df, fy_list)
     attrition = prepare_attrition_data(df, fy_list)
     gender = prepare_gender_data(df)
     age = prepare_age_distribution(df)
@@ -144,11 +146,10 @@ def run_report(data, config):
     experience = prepare_experience_distribution(df)
     education = prepare_education_distribution(df)
 
-    # CHARTS: Plotly examples for each metric
     charts = []
-    # 1. Year-End Headcount chart
+
+    # --- Year-End Headcount Chart (Line) ---
     if not manpower_growth.empty:
-        # Calculate year-end headcount for each FY
         fy_years = [int(fy[-2:]) + 2000 for fy in manpower_growth["FY"]]
         fy_ends = [datetime(y, 3, 31) for y in fy_years]
         year_end_headcounts = []
@@ -156,19 +157,15 @@ def run_report(data, config):
             count = df[
                 (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
                 (
-                    df["date_of_exit"].isna() | 
+                    df["date_of_exit"].isna() |
                     (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
                 )
             ].shape[0]
             year_end_headcounts.append(count)
         manpower_growth["Year-End Headcount"] = year_end_headcounts
-
-        # Replace latest FY label with "YTD"
         manpower_growth["FY"] = manpower_growth["FY"].astype(str)
         if len(manpower_growth) > 0:
             manpower_growth.loc[manpower_growth.index[-1], "FY"] = "YTD"
-
-        # Plot chart
         fig1 = px.line(
             manpower_growth,
             x="FY",
@@ -179,18 +176,30 @@ def run_report(data, config):
         fig1.update_traces(textposition="top center")
         fig1.update_yaxes(range=[0, max(manpower_growth["Year-End Headcount"]) * 1.2])
         charts.append(fig1)
-    # 2. All other charts unchanged
-    if not manpower_cost.empty:
-        manpower_cost["Total Cost Cr"] = manpower_cost["Total Cost"] / 1e7
-        charts.append(
-            px.bar(
-                manpower_cost,
-                x="FY",
-                y="Total Cost Cr",
-                title="Manpower Cost (INR Cr)",
-                text_auto=True
-            ).update_yaxes(title_text="Total Cost (INR Cr)")
+
+        # --- Year-End Manpower Cost (INR Cr) Chart (Bar) ---
+        year_end_costs = []
+        for fy_end in fy_ends:
+            cost = df[
+                (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
+                (
+                    df["date_of_exit"].isna() |
+                    (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
+                )
+            ]["total_ctc_pa"].sum() if "total_ctc_pa" in df.columns else 0
+            year_end_costs.append(cost / 1e7)  # INR Cr
+        manpower_growth["Year-End Cost (INR Cr)"] = year_end_costs
+        fig2 = px.bar(
+            manpower_growth,
+            x="FY",
+            y="Year-End Cost (INR Cr)",
+            title="Year-End Manpower Cost (INR Cr)",
+            text_auto=True
         )
+        fig2.update_yaxes(range=[0, max(manpower_growth["Year-End Cost (INR Cr)"]) * 1.2])
+        charts.append(fig2)
+
+    # --- All Other Charts Unchanged ---
     if not attrition.empty:
         charts.append(px.line(attrition, x="FY", y="Attrition %", title="Attrition Rate"))
     if not gender.empty:
@@ -204,10 +213,9 @@ def run_report(data, config):
     if not education.empty:
         charts.append(px.bar(education, x="Qualification", y="Count", title="Education Distribution"))
 
-    result = {
-        "kpis": calc_kpis(df, fy_list, now),
+    return {
+        "kpis": kpis,
         "charts": charts,
         "fy_list": fy_list,
         "as_of": now
     }
-    return result
