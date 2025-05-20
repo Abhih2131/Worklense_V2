@@ -4,7 +4,6 @@ from utils.chart_renderer import (
     render_line_chart, render_bar_chart,
     render_pie_chart, render_donut_chart
 )
-from utils.format_utils import indian_format
 from reports.executive_summary import run_report
 from kpi_design import render_kpi_card
 
@@ -55,7 +54,7 @@ for i in range(0, len(charts), 2):
             st.markdown(f"##### {title}")
             render_func(df_chart, **params)
 
-# --- Footer ---
+# --- Footer (Optional) ---
 st.markdown(
     "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
     unsafe_allow_html=True
