@@ -12,15 +12,18 @@ def setup_sidebar(emp_df):
     )
     st.session_state["selected_report"] = selected_report
 
-    # 2. Multi-select filters (in single container, minimal spacing)
-    company = st.sidebar.multiselect("Company", sorted(emp_df['company'].dropna().unique()))
-    business_unit = st.sidebar.multiselect("Business Unit", sorted(emp_df['business_unit'].dropna().unique()))
-    department = st.sidebar.multiselect("Department", sorted(emp_df['department'].dropna().unique()))
-    function = st.sidebar.multiselect("Function", sorted(emp_df['function'].dropna().unique()))
-    zone = st.sidebar.multiselect("Zone", sorted(emp_df['zone'].dropna().unique()))
-    area = st.sidebar.multiselect("Area", sorted(emp_df['area'].dropna().unique()))
-    band = st.sidebar.multiselect("Band", sorted(emp_df['band'].dropna().unique()))
-    employment_type = st.sidebar.multiselect("Employment Type", sorted(emp_df['employment_type'].dropna().unique()))
+    # 2. Filters: side-by-side in two columns
+    col1, col2 = st.sidebar.columns(2, gap="small")
+    with col1:
+        company = st.multiselect("Company", sorted(emp_df['company'].dropna().unique()))
+        department = st.multiselect("Department", sorted(emp_df['department'].dropna().unique()))
+        zone = st.multiselect("Zone", sorted(emp_df['zone'].dropna().unique()))
+        band = st.multiselect("Band", sorted(emp_df['band'].dropna().unique()))
+    with col2:
+        business_unit = st.multiselect("Business Unit", sorted(emp_df['business_unit'].dropna().unique()))
+        function = st.multiselect("Function", sorted(emp_df['function'].dropna().unique()))
+        area = st.multiselect("Area", sorted(emp_df['area'].dropna().unique()))
+        employment_type = st.multiselect("Employment Type", sorted(emp_df['employment_type'].dropna().unique()))
 
     filter_dict = {
         "company": company,
