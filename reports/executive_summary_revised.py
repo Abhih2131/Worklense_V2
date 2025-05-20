@@ -6,20 +6,10 @@ def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1, -1, -1)]
 
 def prepare_manpower_growth_data(df, fy_list):
-    # Used for generating FY list (not used for actual headcount/cost calculations anymore)
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
     grouped = df.groupby('FY').size().reset_index(name='Headcount')
-    grouped = grouped[grouped['FY'].isin(fy_list)]
-    grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
-    return grouped
-
-def prepare_manpower_cost_data(df, fy_list):
-    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])
-    df = df.copy()
-    df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
-    grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')
     grouped = grouped[grouped['FY'].isin(fy_list)]
     grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
     return grouped
@@ -177,7 +167,7 @@ def run_report(data, config):
         fig1.update_yaxes(range=[0, max(manpower_growth["Year-End Headcount"]) * 1.2])
         charts.append(fig1)
 
-        # --- Year-End Manpower Cost (INR Cr) Chart (Bar) ---
+        # --- Year-End Manpower Cost (INR Cr) Chart (Bar, FIXED) ---
         year_end_costs = []
         for fy_end in fy_ends:
             cost = df[
