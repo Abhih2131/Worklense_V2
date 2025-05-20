@@ -1,62 +1,32 @@
-KPI_STYLE = {
-    "background": "linear-gradient(135deg, #E0FCF7 0%, #F0F4FF 100%)",  # 2-colour gradient
-    "border_radius": "18px",
-    "box_shadow": "0 2px 12px rgba(80,120,160,0.10)",
-    "padding": "22px 0 10px 0",
-    "width": "100%",
-    "height": "96px",
-    "value_font_size": "2.0rem",
-    "value_color": "#23235B",  # More contrast than E6E7EA for text
-    "label_font_size": "1.08rem",
-    "label_color": "#0A2540",  # Slightly darker for label
-    "label_bold": True,
-    "margin_bottom": "6px",
-    "text_align": "center",
-}
+# kpi_design.py
 
-def format_kpi(value, kpi_type):
-    if kpi_type == "Currency":
-        value_in_cr = value / 1e7
-        return f"₹{value_in_cr:,.0f} Cr"
-    elif kpi_type == "Percentage":
-        return f"{value:.1f}%"
-    elif kpi_type == "Years":
-        return f"{value:.1f} Yrs"
-    elif kpi_type == "Integer":
-        return f"{int(value):,}"
+def render_kpi_card(label, value, value_type="Integer"):
+    """
+    Returns HTML for a KPI card. Supports type-based formatting.
+    """
+    # Type-based value formatting
+    if value_type == "Currency":
+        value_str = f"₹ {value:,.0f}"
+    elif value_type == "Percentage":
+        value_str = f"{value:,.1f}%"
+    elif value_type == "Years":
+        value_str = f"{value:,.1f} yrs"
     else:
-        return str(value)
+        value_str = f"{value:,.0f}"
 
-def render_kpi_card(label, value, kpi_type):
+    # HTML for KPI card (customize as you like)
     return f"""
     <div style="
-        background:{KPI_STYLE['background']};
-        border-radius:{KPI_STYLE['border_radius']};
-        box-shadow:{KPI_STYLE['box_shadow']};
-        padding:{KPI_STYLE['padding']};
-        width:{KPI_STYLE['width']};
-        height:{KPI_STYLE['height']};
-        margin-bottom:{KPI_STYLE['margin_bottom']};
-        text-align:{KPI_STYLE['text_align']};
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        justify-content:center;
-    ">
-        <span style="
-            font-size:{KPI_STYLE['value_font_size']};
-            color:{KPI_STYLE['value_color']};
-            font-weight:700;
-        ">
-            {format_kpi(value, kpi_type)}
-        </span>
-        <span style="
-            font-size:{KPI_STYLE['label_font_size']};
-            color:{KPI_STYLE['label_color']};
-            font-weight:{'bold' if KPI_STYLE['label_bold'] else 'normal'};
-            margin-top:4px;
-        ">
-            {label}
-        </span>
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(20,42,79,0.10);
+        padding: 1.1rem 1.6rem 0.9rem 1.6rem;
+        min-height: 80px;
+        margin-bottom: 0.7rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;">
+        <span style="font-size: 1.15rem; color: #8C98A4; font-weight: 600;">{label}</span>
+        <span style="font-size: 2.1rem; font-weight: bold; color: #183153; margin-top: 0.35rem;">{value_str}</span>
     </div>
     """
