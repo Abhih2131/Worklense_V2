@@ -120,7 +120,7 @@ def calc_kpis(df, fy_list, now):
         {"label": "Active Employees", "value": active, "type": "Integer"},
         {"label": f"Attrition Rate (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": attrition, "type": "Percentage"},
         {"label": f"Joiners (FY {str(current_fy-1)[-2:]}-{str(current_fy)[-2:]})", "value": joiners, "type": "Integer"},
-        {"label": "Total Cost (INR)", "value": total_cost, "type": "Currency"},
+        {"label": "Total Cost (INR Cr)", "value": total_cost / 1e7, "type": "Currency"},
         {"label": "Diversity Ratio", "value": female_ratio, "type": "Percentage"},
         {"label": "Average Tenure", "value": avg_tenure, "type": "Years"},
         {"label": "Average Age", "value": avg_age, "type": "Years"},
