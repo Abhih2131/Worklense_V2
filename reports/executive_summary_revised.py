@@ -6,6 +6,7 @@ def get_last_fy_list(current_fy, n=5):
     return [f"FY-{str(current_fy-i)[-2:]}" for i in range(n-1, -1, -1)]
 
 def prepare_manpower_growth_data(df, fy_list):
+    # This function can be unchanged (used for generating FY list)
     if 'date_of_joining' not in df.columns: return pd.DataFrame(columns=['FY','Headcount'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
@@ -145,11 +146,40 @@ def run_report(data, config):
 
     # CHARTS: Plotly examples for each metric
     charts = []
+    # 1. Year-End Headcount chart
     if not manpower_growth.empty:
-        fig1 = px.line(manpower_growth, x="FY", y="Headcount", title="Manpower Growth", text="Headcount")
+        # Calculate year-end headcount for each FY
+        fy_years = [int(fy[-2:]) + 2000 for fy in manpower_growth["FY"]]
+        fy_ends = [datetime(y, 3, 31) for y in fy_years]
+        year_end_headcounts = []
+        for fy_end in fy_ends:
+            count = df[
+                (pd.to_datetime(df["date_of_joining"], errors='coerce') <= fy_end) &
+                (
+                    df["date_of_exit"].isna() | 
+                    (pd.to_datetime(df["date_of_exit"], errors='coerce') > fy_end)
+                )
+            ].shape[0]
+            year_end_headcounts.append(count)
+        manpower_growth["Year-End Headcount"] = year_end_headcounts
+
+        # Replace latest FY label with "YTD"
+        manpower_growth["FY"] = manpower_growth["FY"].astype(str)
+        if len(manpower_growth) > 0:
+            manpower_growth.loc[manpower_growth.index[-1], "FY"] = "YTD"
+
+        # Plot chart
+        fig1 = px.line(
+            manpower_growth,
+            x="FY",
+            y="Year-End Headcount",
+            title="Year-End Headcount",
+            text="Year-End Headcount"
+        )
         fig1.update_traces(textposition="top center")
-        fig1.update_yaxes(range=[0, manpower_growth["Headcount"].max() * 1.2])
+        fig1.update_yaxes(range=[0, max(manpower_growth["Year-End Headcount"]) * 1.2])
         charts.append(fig1)
+    # 2. All other charts unchanged
     if not manpower_cost.empty:
         manpower_cost["Total Cost Cr"] = manpower_cost["Total Cost"] / 1e7
         charts.append(
