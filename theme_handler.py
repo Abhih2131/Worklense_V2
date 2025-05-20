@@ -9,27 +9,6 @@ def selected_theme():
         initial_sidebar_state="expanded",
     )
 
-    # All available Plotly templates
-    all_plotly_templates = list(pio.templates)
-    # Pick 4 core themes to show as the main options
-    main_themes = {
-        "Default": "plotly",
-        "White Classic": "plotly_white",
-        "Seaborn": "seaborn",
-        "Presentation": "presentation"
-    }
-
-    plotly_theme_label = st.sidebar.selectbox(
-        "Chart Style (Plotly Theme)",
-        options=list(main_themes.keys()),
-        index=0
-    )
-    st.session_state["plotly_template"] = main_themes[plotly_theme_label]
-
-    # (Optional) Show all templates if needed for admin/debugging:
-    # st.sidebar.markdown("**All Plotly Templates:**")
-    # st.sidebar.write(all_plotly_templates)
-
     # Inject global styles
     st.markdown(
         """
