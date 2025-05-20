@@ -8,8 +8,6 @@ from theme_handler import selected_theme   # <--- Add this line
 
 selected_theme()  # <--- And this line
 
-# (the rest of your code remains unchanged)
-
 # === Inject global CSS ===
 try:
     with open("config/style.css") as f:
@@ -102,6 +100,21 @@ if selected_report:
         mod.run_report(data, config)
     else:
         st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
+
+# --- Chart Style (Plotly Theme) selector at the bottom of sidebar ---
+import plotly.io as pio
+main_themes = {
+    "Default": "plotly",
+    "White Classic": "plotly_white",
+    "Seaborn": "seaborn",
+    "Presentation": "presentation"
+}
+plotly_theme_label = st.sidebar.selectbox(
+    "Chart Style (Plotly Theme)",
+    options=list(main_themes.keys()),
+    index=0
+)
+st.session_state["plotly_template"] = main_themes[plotly_theme_label]
 
 # === Footer (Worklense brand) ===
 st.markdown(
