@@ -146,7 +146,10 @@ def run_report(data, config):
     # CHARTS: Plotly examples for each metric
     charts = []
     if not manpower_growth.empty:
-        charts.append(px.line(manpower_growth, x="FY", y="Headcount", title="Manpower Growth"))
+        fig1 = px.line(manpower_growth, x="FY", y="Headcount", title="Manpower Growth", text="Headcount")
+    fig1.update_traces(textposition="top center")
+    fig1.update_yaxes(range=[0, manpower_growth["Headcount"].max() * 1.2])
+    charts.append(fig1)
     if not manpower_cost.empty:
         manpower_cost["Total Cost Cr"] = manpower_cost["Total Cost"] / 1e7
         charts.append(
