@@ -96,7 +96,7 @@ def calc_kpis(df, fy_list, now):
     avg_headcount = (headcount_start + headcount_end) / 2 if (headcount_start + headcount_end) else 1
     attrition = (leavers / avg_headcount) * 100 if avg_headcount else 0
     joiners = df['date_of_joining'].between(fy_start, fy_end).sum() if 'date_of_joining' in df.columns else 0
-    total_cost = df['total_ctc_pa'].sum() if 'total_ctc_pa' in df.columns else 0
+    total_cost = df.loc[mask_active, 'total_ctc_pa'].sum() if 'total_ctc_pa' in df.columns else 0
     female = mask_active & (df['gender'] == 'Female') if 'gender' in df.columns else 0
     total_active = mask_active.sum()
     female_ratio = (female.sum() / total_active * 100) if isinstance(female, pd.Series) and total_active > 0 else 0
