@@ -15,10 +15,10 @@ def prepare_manpower_growth_data(df, fy_list):
     return grouped
 
 def prepare_manpower_cost_data(df, fy_list):
-    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])/1e7
+    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
-    grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')/1e7
+    grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')
     grouped = grouped[grouped['FY'].isin(fy_list)]
     grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
     return grouped
@@ -148,7 +148,16 @@ def run_report(data, config):
     if not manpower_growth.empty:
         charts.append(px.line(manpower_growth, x="FY", y="Headcount", title="Manpower Growth"))
     if not manpower_cost.empty:
-        charts.append(px.bar(manpower_cost, x="FY", y="Total Cost", title="Manpower Cost"))
+        manpower_cost["Total Cost Cr"] = manpower_cost["Total Cost"] / 1e7
+        charts.append(
+            px.bar(
+                manpower_cost,
+                x="FY",
+                y="Total Cost Cr",
+                title="Manpower Cost (INR Cr)",
+                text_auto=True
+            ).update_yaxes(title_text="Total Cost (INR Cr)")
+        )
     if not attrition.empty:
         charts.append(px.line(attrition, x="FY", y="Attrition %", title="Attrition Rate"))
     if not gender.empty:
