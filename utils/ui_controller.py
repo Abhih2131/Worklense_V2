@@ -1,73 +1,47 @@
 import streamlit as st
-import plotly.io as pio
-from utils.data_handler import filter_dataframe, ensure_datetime
 
 def setup_sidebar(emp_df):
-    # Branding in sidebar
-    st.sidebar.markdown("<h2 style='color:#fff;'>Worklense Reports</h2>", unsafe_allow_html=True)
-
-    # --- Chart Style selector at bottom of sidebar ---
-    main_themes = {
-        "Default": "plotly",
-        "White Classic": "plotly_white",
-        "Seaborn": "seaborn",
-        "Presentation": "presentation"
-    }
-    st.sidebar.markdown("---")
-    plotly_theme_label = st.sidebar.selectbox(
-        "Chart Style (Plotly Theme)",
-        options=list(main_themes.keys()),
-        index=0
+    # 1. Report selector at top
+    report_folder = "reports"
+    report_modules = [f[:-3] for f in os.listdir(report_folder) if f.endswith(".py") and not f.startswith("_")]
+    selected_report = st.sidebar.selectbox(
+        "Select Report",
+        report_modules,
+        format_func=lambda x: x.replace("_", " ").title()
     )
-    st.session_state["plotly_template"] = main_themes[plotly_theme_label]
+    st.session_state["selected_report"] = selected_report
 
-    # --- Filters ---
-    filter_columns = [
-        "company", "business_unit", "department", "function",
-        "zone", "area", "band", "employment_type"
-    ]
-    filter_dict = {}
+    # 2. Filters (customize as needed)
+    company = st.sidebar.selectbox("Company", sorted(emp_df['company'].dropna().unique()), index=0)
+    business_unit = st.sidebar.selectbox("Business Unit", sorted(emp_df['business_unit'].dropna().unique()), index=0)
+    department = st.sidebar.selectbox("Department", sorted(emp_df['department'].dropna().unique()), index=0)
+    function = st.sidebar.selectbox("Function", sorted(emp_df['function'].dropna().unique()), index=0)
+    zone = st.sidebar.selectbox("Zone", sorted(emp_df['zone'].dropna().unique()), index=0)
+    area = st.sidebar.selectbox("Area", sorted(emp_df['area'].dropna().unique()), index=0)
+    band = st.sidebar.selectbox("Band", sorted(emp_df['band'].dropna().unique()), index=0)
+    employment_type = st.sidebar.selectbox("Employment Type", sorted(emp_df['employment_type'].dropna().unique()), index=0)
 
-    with st.sidebar.expander("Show Filters", expanded=False):
-        n_cols = 2
-        for row_start in range(0, len(filter_columns), n_cols):
-            cols = st.sidebar.columns(n_cols)
-            for i in range(n_cols):
-                col_idx = row_start + i
-                if col_idx >= len(filter_columns):
-                    continue
-                col = filter_columns[col_idx]
-                options = sorted([str(x) for x in emp_df[col].dropna().unique()])
-                key = f"sidebar_{col}"
-                with cols[i]:
-                    chosen = st.multiselect(
-                        col.replace("_", " ").title(),
-                        options=options,
-                        default=[],
-                        key=key
-                    )
-                    filter_dict[col] = options if not chosen else chosen
+    filter_dict = {
+        "company": company,
+        "business_unit": business_unit,
+        "department": department,
+        "function": function,
+        "zone": zone,
+        "area": area,
+        "band": band,
+        "employment_type": employment_type,
+    }
 
-    # Apply filters
-    filtered_emp = filter_dataframe(emp_df, filter_dict)
-    filtered_emp = ensure_datetime(filtered_emp, ['date_of_joining', 'date_of_exit', 'date_of_birth'])
-    return filtered_emp, filter_dict
+    # 3. Chart style selector at bottom
+    st.sidebar.markdown("---")
+    chart_styles = ["Default", "White Classic", "Seaborn", "Plotly", "Dark"]
+    chart_style = st.sidebar.selectbox("Chart Style (Plotly Theme)", chart_styles)
 
-def render_branding():
-    st.markdown("""
-    <div class='custom-header'>
-      <div class='header-left'>
-        <div class='brand-name'>Worklense</div>
-        <div class='brand-tagline'>A Smarter Lens for Better Decisions</div>
-      </div>
-      <div class='header-right'>
-        <a href="https://yourhelp.site" target="_blank">Help</a>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+    return emp_df, filter_dict
 
 def render_footer():
-    st.markdown(
-        "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
-        unsafe_allow_html=True
-    )
+    st.markdown("""
+        <div class="custom-footer">
+            © 2025 Worklense HR Analytics | All rights reserved.
+        </div>
+    """, unsafe_allow_html=True)
