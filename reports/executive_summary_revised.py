@@ -123,7 +123,7 @@ def calc_kpis(df, fy_list, now):
         {"label": "Total Cost (INR)", "value": total_cost, "type": "Currency"},
         {"label": "Female Ratio", "value": female_ratio, "type": "Percentage"},
         {"label": "Avg Tenure", "value": avg_tenure, "type": "Years"},
-        {"label": "Avg Age", "value": avg_age, "type": "Years"},
+        {"label": "Average Age", "value": avg_age, "type": "Years"},
         {"label": "Avg Total Exp", "value": avg_total_exp, "type": "Years"},
     ]
 
