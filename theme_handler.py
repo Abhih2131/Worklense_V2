@@ -9,8 +9,8 @@ def selected_theme():
         initial_sidebar_state="expanded",
     )
 
-    # Find style.css in current or .streamlit directory
-    css_paths = ["style.css", ".streamlit/style.css"]
+    # Find style.css in current, .streamlit, or config directory
+    css_paths = ["style.css", ".streamlit/style.css", "config/style.css"]
     css_found = False
     for css_path in css_paths:
         if os.path.exists(css_path):
