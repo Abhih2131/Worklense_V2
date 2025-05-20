@@ -1,5 +1,5 @@
 import streamlit as st
-import os  # <-- Added this import
+import os
 
 def setup_sidebar(emp_df):
     # 1. Report selector at top
@@ -12,15 +12,18 @@ def setup_sidebar(emp_df):
     )
     st.session_state["selected_report"] = selected_report
 
-    # 2. Filters (customize as needed)
-    company = st.sidebar.selectbox("Company", sorted(emp_df['company'].dropna().unique()), index=0)
-    business_unit = st.sidebar.selectbox("Business Unit", sorted(emp_df['business_unit'].dropna().unique()), index=0)
-    department = st.sidebar.selectbox("Department", sorted(emp_df['department'].dropna().unique()), index=0)
-    function = st.sidebar.selectbox("Function", sorted(emp_df['function'].dropna().unique()), index=0)
-    zone = st.sidebar.selectbox("Zone", sorted(emp_df['zone'].dropna().unique()), index=0)
-    area = st.sidebar.selectbox("Area", sorted(emp_df['area'].dropna().unique()), index=0)
-    band = st.sidebar.selectbox("Band", sorted(emp_df['band'].dropna().unique()), index=0)
-    employment_type = st.sidebar.selectbox("Employment Type", sorted(emp_df['employment_type'].dropna().unique()), index=0)
+    # 2. Filters as side-by-side multi-selects
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        company = st.multiselect("Company", sorted(emp_df['company'].dropna().unique()))
+        department = st.multiselect("Department", sorted(emp_df['department'].dropna().unique()))
+        zone = st.multiselect("Zone", sorted(emp_df['zone'].dropna().unique()))
+        band = st.multiselect("Band", sorted(emp_df['band'].dropna().unique()))
+    with col2:
+        business_unit = st.multiselect("Business Unit", sorted(emp_df['business_unit'].dropna().unique()))
+        function = st.multiselect("Function", sorted(emp_df['function'].dropna().unique()))
+        area = st.multiselect("Area", sorted(emp_df['area'].dropna().unique()))
+        employment_type = st.multiselect("Employment Type", sorted(emp_df['employment_type'].dropna().unique()))
 
     filter_dict = {
         "company": company,
