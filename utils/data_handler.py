@@ -1,36 +1,62 @@
-# utils/data_handler.py
-
-import pandas as pd
 import streamlit as st
+from utils.data_handler import load_all_data
+from utils.chart_renderer import (
+    render_line_chart, render_bar_chart,
+    render_pie_chart, render_donut_chart
+)
+from utils.format_utils import indian_format
+from reports.executive_summary import run_report
+from kpi_design import render_kpi_card
 
-@st.cache_data(show_spinner=False)
-def load_all_data(data_files):
-    """
-    Load all Excel data files into a dictionary of DataFrames.
-    """
-    data = {}
-    for key, path in data_files.items():
-        try:
-            data[key] = pd.read_excel(path)
-        except Exception:
-            data[key] = pd.DataFrame()  # Empty fallback if missing/broken
-    return data
+# --- Load Data ---
+data_files = {
+    'employee_master': 'data/employee_master.xlsx',
+    'leave': 'data/HRMS_Leave.xlsx',
+    'sales': 'data/Sales_INR.xlsx'
+}
+data = load_all_data(data_files)
+config = {}
 
-def ensure_datetime(df, date_cols):
-    """
-    Convert listed columns in df to datetime (if present).
-    """
-    for col in date_cols:
-        if col in df:
-            df[col] = pd.to_datetime(df[col], errors='coerce')
-    return df
+# --- Run Executive Summary Report (returns KPIs & DataFrames) ---
+report = run_report(data, config)
 
-def filter_dataframe(df, filters):
-    """
-    Apply dict of {col: [values]} filters to df.
-    If "All" or [] is selected for a column, skip filtering that column.
-    """
-    for col, selected in filters.items():
-        if selected and ("All" not in selected):
-            df = df[df[col].isin(selected)]
-    return df
+# --- UI: Executive Summary ---
+st.title("Executive Summary")
+
+# --- KPIs ---
+for i in range(0, len(report["kpis"]), 4):
+    cols = st.columns(4)
+    for j in range(4):
+        idx = i + j
+        if idx >= len(report["kpis"]): break
+        kpi = report["kpis"][idx]
+        with cols[j]:
+            st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type']), unsafe_allow_html=True)
+
+# --- Charts (2 per row) ---
+charts = [
+    ("Manpower Growth", render_line_chart, report["manpower_growth"], {"x": "FY", "y": "Headcount"}),
+    ("Manpower Cost Trend", render_bar_chart, report["manpower_cost"], {"x": "FY", "y": "Total Cost"}),
+    ("Attrition Trend", render_line_chart, report["attrition"], {"x": "FY", "y": "Attrition %"}),
+    ("Gender Diversity", render_donut_chart, report["gender"], {"names": "Gender", "values": "Count"}),
+    ("Age Distribution", render_pie_chart, report["age"], {"names": "Age Group", "values": "Count"}),
+    ("Tenure Distribution", render_pie_chart, report["tenure"], {"names": "Tenure Group", "values": "Count"}),
+    ("Total Experience Distribution", render_bar_chart, report["experience"], {"x": "Experience Group", "y": "Count"}),
+    ("Education Type Distribution", render_donut_chart, report["education"], {"names": "Qualification", "values": "Count"}),
+]
+
+for i in range(0, len(charts), 2):
+    cols = st.columns(2, gap="large")
+    for j in range(2):
+        idx = i + j
+        if idx >= len(charts): break
+        title, render_func, df_chart, params = charts[idx]
+        with cols[j]:
+            st.markdown(f"##### {title}")
+            render_func(df_chart, **params)
+
+# --- Footer ---
+st.markdown(
+    "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
+    unsafe_allow_html=True
+)
