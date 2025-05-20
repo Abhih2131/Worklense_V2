@@ -15,10 +15,10 @@ def prepare_manpower_growth_data(df, fy_list):
     return grouped
 
 def prepare_manpower_cost_data(df, fy_list):
-    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])
+    if 'date_of_joining' not in df.columns or 'total_ctc_pa' not in df.columns: return pd.DataFrame(columns=['FY','Total Cost'])/1e7
     df = df.copy()
     df['FY'] = pd.to_datetime(df['date_of_joining'], errors='coerce').dt.year.apply(lambda y: f"FY-{str(y)[-2:]}" if pd.notnull(y) else None)
-    grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')
+    grouped = df.groupby('FY')['total_ctc_pa'].sum().reset_index(name='Total Cost')/1e7
     grouped = grouped[grouped['FY'].isin(fy_list)]
     grouped = grouped.set_index('FY').reindex(fy_list).reset_index().fillna(0)
     return grouped
