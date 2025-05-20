@@ -1,23 +1,26 @@
 import streamlit as st
 import os
 import importlib
-from utils.data_handler import load_all_data, ensure_datetime, filter_dataframe
-from utils.chart_renderer import *
+from utils.data_handler import load_all_data
+from utils.ui_controller import setup_sidebar, render_branding, render_footer
 from kpi_design import render_kpi_card
-from theme_handler import selected_theme
+from utils.chart_renderer import *
 
-selected_theme()
-
-# --- Data Loading ---
+# --- Data loading ---
 data_files = {
     'employee_master': 'data/employee_master.xlsx',
     'leave': 'data/HRMS_Leave.xlsx',
     'sales': 'data/Sales_INR.xlsx'
 }
 data = load_all_data(data_files)
-config = {}
+emp_df = data['employee_master']
 
-# --- Sidebar: Auto-discover reports ---
+# --- UI: Branding, Sidebar/Filters, Theme selection ---
+filtered_emp, filter_dict = setup_sidebar(emp_df)
+data['employee_master'] = filtered_emp
+render_branding()
+
+# --- Reports: Dynamic discovery from 'reports' folder ---
 def get_report_modules():
     report_folder = "reports"
     files = [f for f in os.listdir(report_folder) if f.endswith(".py") and not f.startswith("_")]
@@ -31,23 +34,12 @@ selected_report = st.sidebar.selectbox(
     format_func=lambda x: x.replace("_", " ").title()
 )
 
-# --- Filters (copy your previous logic here) ---
-# (You can keep the filters code from before, so all reports get the same filters.)
-
-# --- Filter Data ---
-emp_df = data['employee_master']
-# ... (filter logic as before) ...
-# Apply filters to employee_master as needed
-data['employee_master'] = emp_df  # (after filter applied)
-
-# --- Dynamically import and run selected report ---
+# --- Run & render selected report ---
 if selected_report:
     mod = importlib.import_module(f"reports.{selected_report}")
     if hasattr(mod, "run_report"):
-        report = mod.run_report(data, config)
-        # Render KPIs and charts as before, but reading keys from the report dict
+        report = mod.run_report(data, {})
         st.title(selected_report.replace("_", " ").title())
-        # KPIs (if present)
         if "kpis" in report:
             for i in range(0, len(report["kpis"]), 4):
                 cols = st.columns(4)
@@ -57,7 +49,7 @@ if selected_report:
                     kpi = report["kpis"][idx]
                     with cols[j]:
                         st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type']), unsafe_allow_html=True)
-        # Charts (if present)
+        # --- Charts: 2 per row, basic heuristics ---
         chart_keys = [k for k in report if k not in ("kpis", "fy_list", "as_of")]
         for i in range(0, len(chart_keys), 2):
             cols = st.columns(2, gap="large")
@@ -66,21 +58,21 @@ if selected_report:
                 if idx >= len(chart_keys): break
                 chart_key = chart_keys[idx]
                 chart_df = report[chart_key]
-                # Use a convention or config in the report for chart type:
-                # For now, just example (improve per report)
                 with cols[j]:
                     st.markdown(f"##### {chart_key.replace('_', ' ').title()}")
-                    # Example: guess chart function by key
+                    # Basic auto-chart logic (can customize further per report)
                     if "cost" in chart_key:
                         render_bar_chart(chart_df, x="FY", y="Total Cost")
                     elif "attrition" in chart_key:
                         render_line_chart(chart_df, x="FY", y="Attrition %")
                     elif "growth" in chart_key:
                         render_line_chart(chart_df, x="FY", y="Headcount")
-                    elif "gender" in chart_key or "donut" in chart_key:
+                    elif "gender" in chart_key:
                         render_donut_chart(chart_df, names="Gender", values="Count")
-                    elif "age" in chart_key or "tenure" in chart_key:
-                        render_pie_chart(chart_df, names=chart_df.columns[0], values=chart_df.columns[1])
+                    elif "age" in chart_key:
+                        render_pie_chart(chart_df, names="Age Group", values="Count")
+                    elif "tenure" in chart_key:
+                        render_pie_chart(chart_df, names="Tenure Group", values="Count")
                     elif "experience" in chart_key:
                         render_bar_chart(chart_df, x="Experience Group", y="Count")
                     elif "education" in chart_key:
@@ -90,8 +82,4 @@ if selected_report:
     else:
         st.error(f"Report module '{selected_report}' must have a 'run_report(data, config)' function.")
 
-# --- Footer ---
-st.markdown(
-    "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
-    unsafe_allow_html=True
-)
+render_footer()
