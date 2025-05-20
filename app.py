@@ -1,4 +1,5 @@
 import streamlit as st
+from utils.data_handler import load_all_data
 from utils.chart_renderer import (
     render_line_chart, render_bar_chart,
     render_pie_chart, render_donut_chart
@@ -7,14 +8,22 @@ from utils.format_utils import indian_format
 from reports.executive_summary import run_report
 from kpi_design import render_kpi_card
 
-# --- Data loading as before (use your existing logic) ---
-# For demo, assume 'data' and 'config' are already loaded dictionaries
+# --- Load Data ---
+data_files = {
+    'employee_master': 'data/employee_master.xlsx',
+    'leave': 'data/HRMS_Leave.xlsx',
+    'sales': 'data/Sales_INR.xlsx'
+}
+data = load_all_data(data_files)
+config = {}
 
-# --- Run the report (returns all KPIs and DataFrames, no Streamlit code inside) ---
+# --- Run Executive Summary Report (returns KPIs & DataFrames) ---
 report = run_report(data, config)
 
-# --- Layout: KPIs ---
+# --- UI: Executive Summary ---
 st.title("Executive Summary")
+
+# --- KPIs ---
 for i in range(0, len(report["kpis"]), 4):
     cols = st.columns(4)
     for j in range(4):
@@ -24,7 +33,7 @@ for i in range(0, len(report["kpis"]), 4):
         with cols[j]:
             st.markdown(render_kpi_card(kpi['label'], kpi['value'], kpi['type']), unsafe_allow_html=True)
 
-# --- Layout: Charts (2 per row) ---
+# --- Charts (2 per row) ---
 charts = [
     ("Manpower Growth", render_line_chart, report["manpower_growth"], {"x": "FY", "y": "Headcount"}),
     ("Manpower Cost Trend", render_bar_chart, report["manpower_cost"], {"x": "FY", "y": "Total Cost"}),
@@ -45,3 +54,9 @@ for i in range(0, len(charts), 2):
         with cols[j]:
             st.markdown(f"##### {title}")
             render_func(df_chart, **params)
+
+# --- Footer ---
+st.markdown(
+    "<div class='custom-footer'>© 2025 Worklense HR Analytics | All rights reserved.</div>",
+    unsafe_allow_html=True
+)
